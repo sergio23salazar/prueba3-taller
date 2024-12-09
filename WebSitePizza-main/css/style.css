@@ -1,0 +1,33 @@
+/*-- Diseño de la cuadrícula --*/
+.gallery {
+    background-color: rgb(0, 0, 0); /*--color detras de los paneles--*/
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /*--- Tres columnas de igual tamaño --*/
+    grid-gap: 20px; /*-- Espacio entre los elementos de la cuadrícula --*/
+    padding: 20px; /*-- Espacio interno de la galería --*/
+}
+
+/*-- Estilo para las imágenes dentro de la galería --*/
+.gallery img {
+    width: 100%; /*-- Las imágenes ocupan todo el ancho de su celda --*/
+    height: auto; /*-- Mantiene la proporción de las imágenes --*/
+    border: 2px solid #ffbb00; /*-- Borde para las imágenes --*/
+    border-radius: 5px; /*-- Bordes redondeados para las imágenes --*/
+    transition: transform 0.3s, border-color 0.3s; /*-- Transición suave para efectos de hover --*/
+}
+
+/*-- Efecto visual cuando se pasa el mouse sobre las imágenes --*/
+.gallery img:hover {
+    transform: scale(1.1); /*-- Aumenta el tamaño ligeramente para dar efecto de zoom --*/
+    border-color: #de423a; /*-- Cambia el color del borde al pasar el mouse --*/
+}
+
+/* Estilos adicionales para la página */
+body {
+    font-family: Arial, sans-serif; /*-- Fuente predeterminada para el texto --*/
+}
+
+h2 {
+    text-align: center; /*-- Centrar el encabezado --*/ 
+    color: #ffffff; /*-- Cambia de color "visitanos, contactenos y siguenos" de galeria y contacto --*/
+}

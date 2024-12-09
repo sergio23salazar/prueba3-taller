@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&family=Sacramento&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: rgb(0, 0, 0);
+    margin: 0;
+    color: white;
+}
+
+h1, h2, h3, h4, h5 {
+    margin: 0;
+}
+
+.container {
+    width: 100%;
+    margin: auto;
+}
+
+.container--flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+/* Título fuera del formulario, centrado */
+.title {
+    text-align: center; /* Centra el título */
+    font-family: 'Sacramento', cursive;
+    font-size: 40px;
+    color: #fdc62d;
+    margin-bottom: 20px; /* Espacio debajo del título */
+}
+
+/* Estilo de los formularios */
+form {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    margin: auto;
+}
+
+/* Estilo de los inputs y selects */
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 4px;
+    background-color: #444;
+    color: #fff;
+}
+
+/* Estilo de los botones */
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #de423a;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #d93b2a;
+}
+
+/* Estilo del texto centrado en los párrafos */
+p {
+    text-align: center;
+}
+
+/* Estilo para los enlaces */
+a {
+    color: #fdc62d;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Login y Registro</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
+      authDomain: "crud-18998.firebaseapp.com",
+      projectId: "crud-18998",
+      storageBucket: "crud-18998.firebasestorage.app",
+      messagingSenderId: "1046471634199",
+      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    function clearInputs(formId) {
+      const form = document.getElementById(formId);
+      form.reset(); // Limpia todos los campos del formulario
+    }
+
+    function registerUser(email, password, userType) {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          const userId = user.uid;
+          const userRef = ref(database, `${userType}s/${userId}`);
+          set(userRef, { email, userType })
+            .then(() => {
+              alert('Usuario registrado correctamente');
+              clearInputs('registerForm'); // Limpia los campos del formulario de registro
+              toggleLogin();
+            })
+            .catch((error) => {
+              console.error('Error al registrar el usuario:', error);
+            });
+        })
+        .catch((error) => {
+          console.error('Error en el registro:', error);
+        });
+    }
+
+    function loginUser(email, password) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert('Inicio de sesión exitoso');
+          clearInputs('loginForm'); // Limpia los campos del formulario de inicio de sesión
+        })
+        .catch((error) => {
+          console.error('Error al iniciar sesión:', error);
+        });
+    }
+
+    function toggleRegister() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('registerSection').style.display = 'block';
+    }
+
+    function toggleLogin() {
+      document.getElementById('registerSection').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'block';
+    }
+
+    window.addEventListener('load', () => {
+      document.getElementById('registerLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleRegister();
+      });
+
+      document.getElementById('loginLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        toggleLogin();
+      });
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      loginUser(email, password);
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const userType = document.getElementById('registerUserType').value;
+
+      if (password === confirmPassword) {
+        registerUser(email, password, userType);
+      } else {
+        alert('Las contraseñas no coinciden');
+      }
+    });
+  </script>
+</head>
+<body>
+  <!-- Sección de Login -->
+  <div id="loginSection" style="display:none;">
+    <h2 class="title">Iniciar sesión</h2>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" required>
+      <input type="password" id="loginPassword" placeholder="Contraseña" required>
+      <button type="submit">Iniciar sesión</button>
+    </form>
+    <p>¿No tienes cuenta? <a href="#" id="registerLink">Regístrate</a></p>
+  </div>
+  
+  <!-- Sección de Registro -->
+  <div id="registerSection" style="display:block;">
+    <h2 class="title">Registro</h2>
+    <form id="registerForm">
+      <input type="email" id="registerEmail" placeholder="Email" required>
+      <input type="password" id="registerPassword" placeholder="Contraseña" required>
+      <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required>
+      <select id="registerUserType" required>
+        <option value="admin">Administrador</option>
+        <option value="empleado">Empleado</option>
+        <option value="cliente">Cliente</option>
+      </select>
+      <button type="submit">Registrar</button>
+    </form>
+    <p>¿Ya tienes cuenta? <a href="#" id="loginLink">Inicia sesión</a></p>
+  </div>
+</body>
+</html>

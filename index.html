@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles2.css">
+  <title>Admin - CRUD de Productos</title>
+  <script type="module">
+    // Configuración de Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
+      authDomain: "crud-18998.firebaseapp.com",
+      projectId: "crud-18998",
+      storageBucket: "crud-18998.firebasestorage.app",
+      messagingSenderId: "1046471634199",
+      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const MIN_STOCK = 20; // Stock mínimo
+    const MAX_STOCK = 100; // Stock máximo
+
+    // Función para guardar o actualizar un producto
+    function saveProduct(id, name, description, price, stock, discount, promotion) {
+      // Validaciones de stock
+      if (stock < MIN_STOCK) {
+        alert(`El stock no puede ser menor a ${MIN_STOCK}.`);
+        return;
+      }
+      if (stock > MAX_STOCK) {
+        alert(`El stock no puede ser mayor a ${MAX_STOCK}.`);
+        return;
+      }
+
+      const dbRef = ref(database, 'productos/' + id);
+      set(dbRef, {
+        name: name,
+        description: description,
+        price: price,
+        stock: stock,
+        discount: discount,  // Guardamos el descuento
+        promotion: promotion // Guardamos la promoción
+      }).then(() => {
+        alert('Producto guardado correctamente');
+        loadProducts();
+        clearForm();
+      }).catch((error) => {
+        console.error('Error al guardar el producto:', error);
+      });
+    }
+
+    // Función para cargar todos los productos
+    function loadProducts() {
+      const dbRef = ref(database, 'productos/');
+      get(dbRef).then((snapshot) => {
+        const productList = snapshot.exists() ? snapshot.val() : {};
+        const listContainer = document.getElementById('product-list');
+        const lowStockContainer = document.getElementById('low-stock-warning');
+        listContainer.innerHTML = '';
+        lowStockContainer.innerHTML = '';
+
+        let lowStockAlert = '';
+
+        // Iteramos sobre los productos cargados
+        for (let id in productList) {
+          const product = productList[id];
+          const listItem = document.createElement('li');
+          let discountText = product.discount ? ` - Descuento: ${product.discount}%` : '';
+          let promotionText = product.promotion ? ` - Promoción: ${product.promotion}` : '';
+
+          // Agregamos los productos a la lista
+          listItem.innerHTML = `
+            <div class="product-info">
+              <strong>Nombre:</strong> ${product.name}<br>
+              <strong>Descripción:</strong> ${product.description}<br>
+              <strong>Precio:</strong> ${product.price}<br>
+              <strong>Stock:</strong> ${product.stock}<br>
+              ${discountText} ${promotionText}
+            </div>
+            <div class="button-container">
+              <button onclick="editProduct('${id}')">Editar</button>
+              <button onclick="deleteProduct('${id}')">Eliminar</button>
+            </div>`;
+          listContainer.appendChild(listItem);
+
+          // Alertamos si el stock es bajo
+          if (product.stock < MIN_STOCK) {
+            lowStockAlert += `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`;
+          }
+        }
+
+        if (lowStockAlert) {
+          lowStockContainer.innerHTML = `
+            <h3>Productos con stock bajo:</h3>
+            <ul>${lowStockAlert}</ul>
+          `;
+        }
+      }).catch((error) => {
+        console.error('Error al cargar los productos:', error);
+      });
+    }
+
+    // Función para editar un producto
+    function editProduct(id) {
+      const dbRef = ref(database, 'productos/' + id);
+      get(dbRef).then((snapshot) => {
+        const product = snapshot.val();
+        document.getElementById('product-id').value = id;
+        document.getElementById('product-name').value = product.name;
+        document.getElementById('product-description').value = product.description;
+        document.getElementById('product-price').value = product.price;
+        document.getElementById('product-stock').value = product.stock;
+        document.getElementById('product-discount').value = product.discount || ''; // Mostrar descuento si lo tiene
+        document.getElementById('product-promotion').value = product.promotion || ''; // Mostrar promoción si la tiene
+      });
+    }
+
+    // Función para eliminar un producto
+    function deleteProduct(id) {
+      const dbRef = ref(database, 'productos/' + id);
+      remove(dbRef).then(() => {
+        alert('Producto eliminado');
+        loadProducts();
+      }).catch((error) => {
+        console.error('Error al eliminar el producto:', error);
+      });
+    }
+
+    // Función para limpiar el formulario
+    function clearForm() {
+      document.getElementById('product-form').reset();
+      // Resetear los campos de descuento y promoción
+      document.getElementById('product-discount').disabled = true;
+      document.getElementById('product-promotion').disabled = true;
+    }
+
+    // Función para manejar la selección de descuento o promoción
+    function handleDiscountPromotionChange() {
+      const discountCheckbox = document.getElementById('discount-checkbox');
+      const promotionCheckbox = document.getElementById('promotion-checkbox');
+
+      // Habilitar/deshabilitar los campos según las casillas
+      document.getElementById('product-discount').disabled = !discountCheckbox.checked;
+      document.getElementById('product-promotion').disabled = !promotionCheckbox.checked;
+
+      if (!discountCheckbox.checked) {
+        document.getElementById('product-discount').value = ''; // Limpiar el campo de descuento
+      }
+      if (!promotionCheckbox.checked) {
+        document.getElementById('product-promotion').value = ''; // Limpiar el campo de promoción
+      }
+    }
+
+    window.saveProduct = saveProduct;
+    window.loadProducts = loadProducts;
+    window.editProduct = editProduct;
+    window.deleteProduct = deleteProduct;
+    window.handleDiscountPromotionChange = handleDiscountPromotionChange;
+
+    window.onload = loadProducts;
+
+    // Guardar un producto cuando se envíe el formulario
+    document.getElementById('product-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('product-id').value || Date.now().toString();
+      const name = document.getElementById('product-name').value;
+      const description = document.getElementById('product-description').value;
+      const price = document.getElementById('product-price').value;
+      const stock = document.getElementById('product-stock').value;
+      const discount = document.getElementById('product-discount').value;
+      const promotion = document.getElementById('product-promotion').value;
+      saveProduct(id, name, description, price, stock, discount, promotion);
+    });
+  </script>
+</head>
+<body>
+  <h1>CRUD de Productos</h1>
+
+  <!-- Formulario para agregar o editar un producto -->
+  <form id="product-form">
+    <input type="hidden" id="product-id" />
+    <label for="product-name">Nombre:</label>
+    <input type="text" id="product-name" required />
+    <label for="product-description">Descripción:</label>
+    <textarea id="product-description" required></textarea>
+    <label for="product-price">Precio:</label>
+    <input type="number" id="product-price" required />
+    <label for="product-stock">Stock:</label>
+    <input type="number" id="product-stock" required />
+
+    <!-- Opciones para seleccionar descuento y/o promoción -->
+    <div>
+      <input type="checkbox" id="discount-checkbox" onclick="handleDiscountPromotionChange()">
+      <label for="discount-checkbox">Descuento</label>
+      
+      <input type="checkbox" id="promotion-checkbox" onclick="handleDiscountPromotionChange()">
+      <label for="promotion-checkbox">Promoción</label>
+    </div>
+
+    <!-- Campo de descuento -->
+    <div>
+      <label for="product-discount">Descuento (%):</label>
+      <input type="number" id="product-discount" disabled />
+    </div>
+
+    <!-- Campo de promoción -->
+    <div>
+      <label for="product-promotion">Promoción:</label>
+      <input type="text" id="product-promotion" disabled />
+    </div>
+
+    <button type="submit">Guardar Producto</button>
+  </form>
+
+  <h2>Lista de Productos</h2>
+  <ul id="product-list"></ul>
+
+  <div id="low-stock-warning"></div>
+</body>
+</html>
