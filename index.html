@@ -143,10 +143,22 @@
     function handleDiscountPromotionChange() {
       const discountCheckbox = document.getElementById('discount-checkbox');
       const promotionCheckbox = document.getElementById('promotion-checkbox');
+      const messageContainer = document.getElementById('warning-message');
 
       // Habilitar/deshabilitar los campos según las casillas
       document.getElementById('product-discount').disabled = !discountCheckbox.checked;
       document.getElementById('product-promotion').disabled = !promotionCheckbox.checked;
+
+      // Mostrar mensaje de advertencia si no se marca una casilla
+      if (!discountCheckbox.checked && document.getElementById('product-discount').value !== '') {
+        messageContainer.textContent = 'Por favor, marque la casilla de "Descuento" antes de ingresar un valor.';
+        messageContainer.style.color = 'red';
+      } else if (!promotionCheckbox.checked && document.getElementById('product-promotion').value !== '') {
+        messageContainer.textContent = 'Por favor, marque la casilla de "Promoción" antes de ingresar un valor.';
+        messageContainer.style.color = 'red';
+      } else {
+        messageContainer.textContent = ''; // Limpiar el mensaje si no hay errores
+      }
 
       if (!discountCheckbox.checked) {
         document.getElementById('product-discount').value = ''; // Limpiar el campo de descuento
@@ -177,6 +189,59 @@
       saveProduct(id, name, description, price, stock, discount, promotion);
     });
   </script>
+
+  <style>
+    /* Estilos para el formulario */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 300px;
+      margin: 0 auto;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    /* Estilos para los botones de descuento y promoción */
+    input[type="checkbox"] {
+      margin-right: 8px;
+      transform: scale(1.5);
+    }
+
+    label {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .checkbox-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    #warning-message {
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    /* Estilos para el formulario de descuento y promoción */
+    .checkbox-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .checkbox-container div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+
 </head>
 <body>
   <h1>CRUD de Productos</h1>
@@ -194,12 +259,15 @@
     <input type="number" id="product-stock" required />
 
     <!-- Opciones para seleccionar descuento y/o promoción -->
-    <div>
-      <input type="checkbox" id="discount-checkbox" onclick="handleDiscountPromotionChange()">
-      <label for="discount-checkbox">Descuento</label>
-      
-      <input type="checkbox" id="promotion-checkbox" onclick="handleDiscountPromotionChange()">
-      <label for="promotion-checkbox">Promoción</label>
+    <div class="checkbox-container">
+      <div>
+        <input type="checkbox" id="discount-checkbox" onclick="handleDiscountPromotionChange()">
+        <label for="discount-checkbox">Descuento</label>
+      </div>
+      <div>
+        <input type="checkbox" id="promotion-checkbox" onclick="handleDiscountPromotionChange()">
+        <label for="promotion-checkbox">Promoción</label>
+      </div>
     </div>
 
     <!-- Campo de descuento -->
@@ -213,6 +281,9 @@
       <label for="product-promotion">Promoción:</label>
       <input type="text" id="product-promotion" disabled />
     </div>
+
+    <!-- Mensaje de advertencia -->
+    <div id="warning-message"></div>
 
     <button type="submit">Guardar Producto</button>
   </form>
