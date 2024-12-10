@@ -1,87 +1,95 @@
+/* Importación de fuentes desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&family=Sacramento&display=swap');
 
+/* Reglas generales para todos los elementos */
 * {
-    box-sizing: border-box;
+    box-sizing: border-box; /* Asegura que el ancho y el alto incluyan el padding y el border */
 }
 
+/* Estilos generales para el cuerpo de la página */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: rgb(0, 0, 0);
-    margin: 0;
-    color: white;
+    font-family: 'Arial', sans-serif; /* Define la fuente principal */
+    background-color: rgb(0, 0, 0); /* Fondo */
+    margin: 0; /* Elimina el margen predeterminado */
+    color: white; /* Texto */
 }
 
+/* Elimina el margen de los títulos */
 h1, h2, h3, h4, h5 {
-    margin: 0;
+    margin: 0; /* Elimina el margen */
 }
 
+/* Contenedor con 100% de ancho y centrado */
 .container {
-    width: 100%;
-    margin: auto;
+    width: 100%; /* Ancho completo */
+    margin: auto; /* Centrado automático */
 }
 
+/* Contenedor con diseño en flex para centrar los elementos */
 .container--flex {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #fff;
+    display: flex; /* Usa flexbox */
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    color: #fff; /* Texto */
 }
 
-/* Título fuera del formulario, centrado */
+/* Estilo para el título fuera del formulario, centrado */
 .title {
-    text-align: center; /* Centra el título */
-    font-family: 'Sacramento', cursive;
-    font-size: 40px;
-    color: #fdc62d;
-    margin-bottom: 20px; /* Espacio debajo del título */
+    text-align: center; /* Centra el texto */
+    font-family: 'Sacramento', cursive; /* Fuente cursiva de Sacramento */
+    font-size: 40px; /* Tamaño de fuente grande */
+    color: #fdc62d; /* Color */
+    margin-bottom: 20px; /* Espacio inferior */
 }
 
-/* Estilo de los formularios */
+/* Estilo del formulario */
 form {
-    background-color: #333;
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    margin: auto;
+    background-color: #333; /* Fondo */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 8px; /* Bordes redondeados */
+    width: 300px; /* Ancho fijo */
+    margin: auto; /* Centrado del formulario */
 }
 
-/* Estilo de los inputs y selects */
+/* Estilo para los inputs y selects */
 input, select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 4px;
-    background-color: #444;
-    color: #fff;
+    width: 100%; /* Ancho completo */
+    padding: 10px; /* Relleno interno */
+    margin: 10px 0; /* Márgenes arriba y abajo */
+    border: none; /* Sin bordes */
+    border-radius: 4px; /* Bordes redondeados */
+    background-color: #444; /* Fondo */
+    color: #fff; /* Texto */
 }
 
-/* Estilo de los botones */
+/* Estilo para los botones */
 button {
-    width: 100%;
-    padding: 10px;
-    background-color: #de423a;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    width: 100%; /* Ancho completo */
+    padding: 10px; /* Relleno interno */
+    background-color: #de423a; /* Fondo */
+    color: #fff; /* Texto */
+    border: none; /* Sin bordes */
+    border-radius: 4px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor a mano al pasar por encima */
 }
 
+/* Estilo para el hover en los botones */
 button:hover {
-    background-color: #d93b2a;
+    background-color: #d93b2a; /* Cambia el color a un tono más oscuro de rojo */
 }
 
-/* Estilo del texto centrado en los párrafos */
+/* Estilo para los párrafos con texto centrado */
 p {
-    text-align: center;
+    text-align: center; /* Centra el texto */
 }
 
 /* Estilo para los enlaces */
 a {
-    color: #fdc62d;
-    text-decoration: none;
+    color: #fdc62d; /* Color */
+    text-decoration: none; /* Sin subrayado */
 }
 
+/* Estilo para el hover en los enlaces */
 a:hover {
-    text-decoration: underline;
+    text-decoration: underline; /* Añade subrayado cuando el cursor pasa sobre el enlace */
 }

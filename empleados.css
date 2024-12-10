@@ -1,0 +1,149 @@
+/* Estilos básicos */
+body {
+    font-family: 'Arial', sans-serif; /* Define la fuente general del cuerpo */
+    background-color: #000000; /* Color de fondo para la página */
+    color: #ffffff; /* Color del texto */
+    margin: 0; /* Elimina el margen por defecto */
+    padding: 0; /* Elimina el padding por defecto */
+    display: flex; /* Establece el diseño en flexbox */
+    flex-direction: column; /* Organiza los elementos en columna */
+    align-items: center; /* Centra los elementos horizontalmente */
+}
+
+/* Encabezado */
+header {
+    background-color: #000000; /* Fondo para el encabezado */
+    width: 100%; /* Hace que el encabezado ocupe todo el ancho */
+    padding: 1.5em 0; /* Espaciado arriba y abajo */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Sombra suave para el encabezado */
+}
+
+.header-container {
+    display: flex; /* Utiliza flexbox para el contenedor */
+    justify-content: center; /* Centra el contenido horizontalmente */
+    align-items: center; /* Centra el contenido verticalmente */
+    max-width: 1200px; /* Establece un ancho máximo */
+    margin: 0 auto; /* Centra el contenedor */
+}
+
+header h2 {
+    margin: 0; /* Elimina el margen */
+    color: #fdc62d; /* Color del texto */
+    font-size: 1.8rem; /* Tamaño de fuente */
+}
+
+/* Información del empleado */
+.employee-info {
+    background-color: #333; /* Fondo para la información del empleado */
+    padding: 1.5em; /* Espaciado interno */
+    margin-top: 2.5em; /* Espacio superior adicional */
+    margin-bottom: 2em; /* Espacio inferior adicional */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    max-width: 600px; /* Establece un ancho máximo */
+    width: 100%; /* Hace que ocupe todo el ancho disponible */
+}
+
+.employee-info p {
+    font-size: 1.1rem; /* Tamaño de fuente para los párrafos */
+    color: #ffffff; /* Color para el texto */
+    margin-bottom: 1em; /* Espacio entre los párrafos */
+}
+
+.logout-btn {
+    background-color: #de423a; /* Fondo para el botón de cerrar sesión */
+    color: #fff; /* Texto */
+    border: none; /* Sin borde */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 0.8em 1.5em; /* Espaciado dentro del botón */
+    cursor: pointer; /* Aparece como un puntero cuando el usuario pasa el mouse sobre el botón */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Sombra para el botón */
+    font-size: 1rem; /* Tamaño de fuente */
+    transition: background-color 0.3s ease; /* Efecto de transición para el cambio de color */
+    margin-top: 1em; /* Espacio superior para el botón */
+    display: inline-block; /* Hace que el botón sea un bloque en línea */
+}
+
+.logout-btn:hover {
+    background-color: #d93b2a; /* Cambia el color de fondo cuando el mouse pasa sobre el botón */
+}
+
+/* Secciones */
+main {
+    max-width: 1200px; /* Establece un ancho máximo para las secciones */
+    margin: 2em; /* Margen alrededor del contenido */
+    width: 100%; /* Ocupa todo el ancho disponible */
+}
+
+section {
+    background-color: #333; /* Fondo para las secciones */
+    padding: 2em; /* Espaciado dentro de las secciones */
+    margin-bottom: 2em; /* Espacio inferior entre las secciones */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Sombra sutil para las secciones */
+}
+
+h3 {
+    font-size: 1.6rem; /* Tamaño de fuente para los encabezados */
+    color: #fdc62d; /* Color de texto para los encabezados */
+    margin-bottom: 1em; /* Espacio debajo de los encabezados */
+}
+
+/* Productos */
+#productsList {
+    display: grid; /* Utiliza el modelo de grid para mostrar los productos */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Define el tamaño y la cantidad de columnas */
+    gap: 1.5em; /* Espacio entre los productos */
+}
+
+.product-card {
+    background-color: #444; /* Fondo para las tarjetas de productos */
+    padding: 1.5em; /* Espaciado interno de las tarjetas */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Sombra sutil para las tarjetas */
+    transition: transform 0.3s ease; /* Efecto de transición para el hover */
+    text-align: center; /* Centra el contenido dentro de las tarjetas */
+    border: 1px solid #333; /* Borde sutil alrededor de las tarjetas */
+}
+
+.product-card:hover {
+    transform: scale(1.05); /* Efecto de agrandar la tarjeta al pasar el mouse */
+}
+
+.product-card h3 {
+    font-size: 1.3rem; /* Tamaño de fuente para el título del producto */
+    margin-bottom: 0.5em; /* Espacio debajo del título */
+    color: #fff; /* Color para el título */
+}
+
+.product-card .product-price {
+    font-size: 1.1rem; /* Tamaño de fuente para el precio del producto */
+    font-weight: bold; /* Hace el precio en negrita */
+    color: #4caf50; /* Color para el precio */
+}
+
+.product-card .product-description {
+    font-size: 1rem; /* Tamaño de fuente para la descripción */
+    color: #ccc; /* Color para la descripción */
+    margin-top: 1em; /* Espacio superior para la descripción */
+}
+
+/* Responsividad */
+@media screen and (max-width: 768px) {
+    .header-container {
+        flex-direction: column; /* Cambia la dirección de los elementos a columna en pantallas pequeñas */
+        align-items: flex-start; /* Alinea los elementos al principio */
+    }
+    
+    header h2 {
+        font-size: 1.5rem; /* Reduce el tamaño de la fuente del título */
+    }
+    
+    .product-card {
+        padding: 1em; /* Reduce el espaciado interno de las tarjetas */
+    }
+    
+    .employee-info {
+        width: 90%; /* Hace que la información del empleado ocupe el 90% del ancho */
+    }
+}

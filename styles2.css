@@ -1,172 +1,171 @@
 /* Reset básico */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box; /* Establece el modelo de caja en 'border-box' para todos los elementos */
+  margin: 0; /* Elimina el margen predeterminado de todos los elementos */
+  padding: 0; /* Elimina el relleno predeterminado de todos los elementos */
 }
 
 /* General */
 body {
-  font-family: 'Roboto', Arial, sans-serif;
-  background-color: #121212;
-  color: #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  padding: 20px;
+  font-family: 'Roboto', Arial, sans-serif; /* Establece la tipografía base */
+  background-color: #000000; /* Establece el color de fondo para la página */
+  color: #e0e0e0; /* Establece el color del texto */
+  display: flex; /* Usa flexbox para el diseño */
+  flex-direction: column; /* Organiza los elementos en columna */
+  align-items: center; /* Centra los elementos horizontalmente */
+  justify-content: flex-start; /* Alinea los elementos al inicio de la página */
+  min-height: 100vh; /* Asegura que la altura mínima sea el 100% de la ventana */
+  padding: 20px; /* Agrega relleno a la página */
 }
 
 /* Títulos */
 h1, h2 {
-  color: #ffd600;
-  text-align: center;
-  margin: 20px 0;
+  color: #fdc62d; /* Establece el color para los títulos */
+  text-align: center; /* Centra los títulos */
+  margin: 20px 0; /* Establece márgenes verticales */
 }
 
 /* Formulario */
 form {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  background-color: #333; /* Establece un fondo oscuro para el formulario */
+  border: 1px solid #333; /* Establece un borde gris oscuro */
+  border-radius: 8px; /* Redondea las esquinas del formulario */
+  padding: 20px; /* Establece relleno dentro del formulario */
+  width: 100%; /* Hace que el formulario ocupe todo el ancho disponible */
+  max-width: 400px; /* Establece un máximo de 400px de ancho */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); /* Agrega sombra para dar profundidad */
 }
 
 /* Estilos para inputs y botones en formulario */
 form input, form textarea {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: none;
-  border-radius: 4px;
-  background-color: #252525;
-  color: #e0e0e0;
-  font-size: 1rem;
+  width: 100%; /* Hace que los campos de entrada ocupen todo el ancho disponible */
+  padding: 10px; /* Agrega relleno a los campos de entrada */
+  margin-bottom: 15px; /* Agrega margen debajo de cada campo */
+  border: none; /* Elimina el borde predeterminado de los campos */
+  border-radius: 4px; /* Redondea las esquinas de los campos */
+  background-color: #444; /* Establece un fondo oscuro para los campos */
+  color: #e0e0e0; /* Establece el color del texto */
+  font-size: 1rem; /* Establece el tamaño de fuente */
 }
 
 /* Botón de guardar */
 form button {
-  width: 100%;
-  padding: 10px;
-  background-color: #ff9800;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s;
+  width: 100%; /* Hace que el botón ocupe todo el ancho disponible */
+  padding: 10px; /* Agrega relleno al botón */
+  background-color: #fdc62d; /* Establece el color de fondo del botón */
+  border: none; /* Elimina el borde del botón */
+  border-radius: 4px; /* Redondea las esquinas del botón */
+  color: white; /* Establece el color del texto del botón */
+  font-size: 1rem; /* Establece el tamaño de la fuente */
+  cursor: pointer; /* Cambia el cursor a puntero para indicar interactividad */
+  transition: background-color 0.3s ease, transform 0.2s; /* Agrega transición para color de fondo y escalado */
 }
 
 form button:hover {
-  background-color: #0288d1;
-  transform: scale(1.05);
+  background-color: #f44336; /* Cambia el color del fondo del botón al pasar el mouse */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón al pasar el mouse */
 }
 
 /* Lista de productos */
 ul#product-list {
-  list-style-type: none;
-  padding: 0;
-  width: 100%;
-  max-width: 600px;
+  list-style-type: none; /* Elimina los puntos de lista */
+  padding: 0; /* Elimina el relleno predeterminado */
+  width: 100%; /* Hace que la lista ocupe todo el ancho disponible */
+  max-width: 600px; /* Establece un máximo de 600px de ancho para la lista */
 }
 
 ul#product-list li {
-  background-color: #252525;
-  margin-bottom: 10px;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #333;
+  background-color: #333; /* Establece un fondo oscuro para cada elemento de la lista */
+  margin-bottom: 10px; /* Agrega margen inferior entre los elementos de la lista */
+  padding: 15px; /* Agrega relleno a cada elemento de la lista */
+  border-radius: 8px; /* Redondea las esquinas de los elementos */
+  border: 1px solid #333; /* Establece un borde gris oscuro para los elementos */
 }
 
 ul#product-list li .product-info {
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* Agrega margen debajo de la información del producto */
 }
 
 ul#product-list li .button-container {
-  display: flex;
-  justify-content: space-between;
+  display: flex; /* Usa flexbox para alinear los botones dentro del elemento */
+  justify-content: space-between; /* Espacia los botones entre sí */
 }
 
 ul#product-list li button {
-  padding: 10px;
-  border-radius: 4px;
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s;
+  padding: 10px; /* Agrega relleno a los botones */
+  border-radius: 4px; /* Redondea las esquinas de los botones */
+  color: rgb(255, 255, 255); /* Establece el color del texto de los botones */
+  font-size: 1rem; /* Establece el tamaño de la fuente de los botones */
+  cursor: pointer; /* Cambia el cursor a puntero para indicar interactividad */
+  transition: background-color 0.3s ease, transform 0.2s; /* Agrega transición para color de fondo y escalado */
 }
 
 ul#product-list li button:nth-child(1) {
-  background-color: #ff9800;
+  background-color: #fdc62d; /* Establece el color de fondo para el primer botón */
 }
 
 ul#product-list li button:nth-child(2) {
-  background-color: #f44336;
+  background-color: #fdc62d; /* Establece el color de fondo para el segundo botón */
 }
 
 ul#product-list li button:hover {
-  background-color: #0288d1;
-  transform: scale(1.05);
+  background-color: #f44336; /* Cambia el color de fondo de los botones al pasar el mouse */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño de los botones al pasar el mouse */
 }
 
 /* Nuevo estilo para la selección de descuento y promoción */
 .form-radio {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
+  display: flex; /* Usa flexbox para organizar los elementos de radio */
+  justify-content: space-between; /* Espacia los botones de radio */
+  margin-bottom: 15px; /* Agrega margen inferior */
 }
 
 .form-radio label {
-  margin-right: 10px;
-  color: #ffd600;
+  margin-right: 10px; /* Agrega margen a la derecha de las etiquetas */
+  color: #ffd600; /* Establece el color dorado para las etiquetas */
 }
 
 form .radio-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  display: flex; /* Usa flexbox para organizar los botones de radio */
+  justify-content: space-between; /* Espacia los botones de radio */
+  gap: 10px; /* Agrega espacio entre los botones de radio */
 }
 
 form .radio-group input[type="radio"] {
-  margin-right: 5px;
+  margin-right: 5px; /* Agrega margen a la derecha de los botones de radio */
 }
 
 #discount-form, #promotion-form {
-  margin-top: 15px;
-  display: none; /* Se ocultan inicialmente */
+  margin-top: 15px; /* Agrega margen superior */
+  display: none; /* Se ocultan inicialmente los formularios de descuento y promoción */
 }
 
 #discount-form input[type="number"], #promotion-form input[type="text"] {
-  max-width: 150px;
+  max-width: 150px; /* Establece un máximo de 150px para el ancho de los campos numéricos */
 }
 
 #discount-form, #promotion-form textarea {
-  max-width: 300px;
+  max-width: 300px; /* Establece un máximo de 300px para el ancho de los textos */
 }
 
 /* Visibilidad de los formularios */
 .show-discount, .show-promotion {
-  display: block !important;
+  display: block !important; /* Hace visibles los formularios de descuento y promoción */
 }
 
 /* Estilo para botones de descuento y promoción */
 button.discount-button {
-  background-color: #8bc34a;
+  background-color: #8bc34a; /* Establece el color de fondo del botón de descuento */
 }
 
 button.promotion-button {
-  background-color: #ff5722;
+  background-color: #ff5722; /* Establece el color de fondo del botón de promoción */
 }
 
 button.discount-button:hover {
-  background-color: #689f38;
+  background-color: #689f38; /* Cambia el color del fondo del botón de descuento al pasar el mouse */
 }
 
 button.promotion-button:hover {
-  background-color: #f44336;
+  background-color: #f44336; /* Cambia el color del fondo del botón de promoción al pasar el mouse */
 }
-
