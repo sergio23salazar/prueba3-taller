@@ -58,7 +58,8 @@
     </main>
     <section class="contact-form">
         <div class="container">
-            <form action="your_form_processing_script.php" method="post">
+            <!-- Formulario para Enviar los Datos a Mailtrap -->
+            <form id="contact-form">
                 <div class="form-group">
                     <label for="name">Nombre:</label>
                     <input type="text" id="name" name="name" required>
@@ -115,5 +116,41 @@
         <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
     </footer>
     <script src="js/menu.js"></script>
+    <!-- Script para Enviar Formulario -->
+    <script type="text/javascript">
+        const form = document.getElementById("contact-form");
+
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();  // Prevenir el comportamiento por defecto del formulario
+
+            // Crear un objeto con los datos del formulario
+            const formData = new FormData(form);
+
+            // Crear el objeto de opciones para la solicitud fetch
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(Object.fromEntries(formData))  // Convertir FormData en objeto JSON
+            };
+
+            // Enviar los datos al servidor (express.js)
+            fetch('/send-email', options)
+                .then(response => {
+                    if (response.ok) {
+                        // Si la respuesta es exitosa
+                        alert("¡Tu mensaje ha sido enviado!");
+                        form.reset();  // Limpiar los campos del formulario
+                    } else {
+                        throw new Error('Error al enviar el mensaje');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Hubo un error al enviar tu mensaje.");
+                });
+        });
+    </script>
 </body>
 </html>
