@@ -8,7 +8,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
@@ -33,12 +33,12 @@
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
-          const userRef = ref(database, `${userType}s/${userId}`);
-          set(userRef, { email, userType })
+          const userRef = ref(database, `${userType}/${userId}`); // Guardamos el usuario en la categoría correspondiente
+          set(userRef, { email })
             .then(() => {
               alert('Usuario registrado correctamente');
               clearInputs('registerForm'); // Limpia los campos del formulario de registro
-              toggleLogin();
+              toggleLogin();  // Cambia a la vista de login
             })
             .catch((error) => {
               console.error('Error al registrar el usuario:', error);
@@ -51,7 +51,39 @@
 
     function loginUser(email, password) {
       signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
+        .then((userCredential) => {
+          const user = userCredential.user;
+          const userId = user.uid;
+
+          // Verificamos en qué categoría está el usuario (admins, clientes, empleados)
+          const categories = ['admins', 'clientes', 'empleados'];
+
+          let userCategory = null;
+
+          // Recorremos las categorías para encontrar al usuario
+          let checkCategoryPromises = categories.map((category) => {
+            const userRef = ref(database, `${category}/${userId}`);
+            return get(userRef).then((snapshot) => {
+              if (snapshot.exists()) {
+                userCategory = category;
+                if (userCategory === "admins") {
+                  window.location.href = "http://192.168.0.19:5501/index.html";  // Redirigir al panel del administrador
+                } else if (userCategory === "empleados") {
+                  window.location.href = "empleado_dashboard.html";  // Redirigir al panel del empleado
+                } else if (userCategory === "clientes") {
+                  window.location.href = "cliente_dashboard.html";  // Redirigir al panel del cliente
+                }
+              }
+            });
+          });
+
+          // Esperamos a que todas las búsquedas se realicen
+          Promise.all(checkCategoryPromises).then(() => {
+            if (!userCategory) {
+              alert("Usuario no registrado en ninguna categoría");
+            }
+          });
+
           alert('Inicio de sesión exitoso');
           clearInputs('loginForm'); // Limpia los campos del formulario de inicio de sesión
         })
@@ -124,9 +156,9 @@
       <input type="password" id="registerPassword" placeholder="Contraseña" required>
       <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required>
       <select id="registerUserType" required>
-        <option value="admin">Administrador</option>
-        <option value="empleado">Empleado</option>
-        <option value="cliente">Cliente</option>
+        <option value="admins">Administrador</option>
+        <option value="empleados">Empleado</option>
+        <option value="clientes">Cliente</option>
       </select>
       <button type="submit">Registrar</button>
     </form>
