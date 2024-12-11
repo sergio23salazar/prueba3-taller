@@ -25,7 +25,7 @@
 
     function clearInputs(formId) {
       const form = document.getElementById(formId);
-      form.reset(); // Limpia todos los campos del formulario
+      form.reset();
     }
 
     function registerUser(email, password, userType) {
@@ -33,12 +33,12 @@
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
-          const userRef = ref(database, `${userType}/${userId}`); // Guardamos el usuario en la categoría correspondiente
+          const userRef = ref(database, `${userType}/${userId}`);
           set(userRef, { email })
             .then(() => {
               alert('Usuario registrado correctamente');
-              clearInputs('registerForm'); // Limpia los campos del formulario de registro
-              toggleLogin();  // Cambia a la vista de login
+              clearInputs('registerForm');
+              toggleLogin();
             })
             .catch((error) => {
               console.error('Error al registrar el usuario:', error);
@@ -54,30 +54,24 @@
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
-
-          // Verificamos en qué categoría está el usuario (admins, clientes, empleados)
           const categories = ['admins', 'clientes', 'empleados'];
-
           let userCategory = null;
-
-          // Recorremos las categorías para encontrar al usuario
           let checkCategoryPromises = categories.map((category) => {
             const userRef = ref(database, `${category}/${userId}`);
             return get(userRef).then((snapshot) => {
               if (snapshot.exists()) {
                 userCategory = category;
                 if (userCategory === "admins") {
-                  window.location.href = "index.html";  // Redirigir al panel del administrador
+                  window.location.href = "index.html";
                 } else if (userCategory === "empleados") {
-                  window.location.href = "empleado_dashboard.html";  // Redirigir al panel del empleado
+                  window.location.href = "empleado_dashboard.html";
                 } else if (userCategory === "clientes") {
-                  window.location.href = "cliente_dashboard.html";  // Redirigir al panel del cliente
+                  window.location.href = "cliente_dashboard.html";
                 }
               }
             });
           });
 
-          // Esperamos a que todas las búsquedas se realicen
           Promise.all(checkCategoryPromises).then(() => {
             if (!userCategory) {
               alert("Usuario no registrado en ninguna categoría");
@@ -85,7 +79,7 @@
           });
 
           alert('Inicio de sesión exitoso');
-          clearInputs('loginForm'); // Limpia los campos del formulario de inicio de sesión
+          clearInputs('loginForm');
         })
         .catch((error) => {
           console.error('Error al iniciar sesión:', error);
@@ -137,6 +131,9 @@
   </script>
 </head>
 <body>
+  <!-- Botón de Volver a Inicio -->
+  <button style="margin-bottom: 20px;" onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
+
   <!-- Sección de Login -->
   <div id="loginSection" style="display:none;">
     <h2 class="title">Iniciar sesión</h2>
