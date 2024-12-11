@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles2.css">
+  <title>Consulta de Compra</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
+      authDomain: "crud-18998.firebaseapp.com",
+      projectId: "crud-18998",
+      storageBucket: "crud-18998.firebasestorage.app",
+      messagingSenderId: "1046471634199",
+      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Función para consultar la compra por código
+    function checkPurchase() {
+      const purchaseCode = document.getElementById('purchase-code').value.trim();
+
+      if (!purchaseCode) {
+        alert('Por favor ingrese un código de compra.');
+        return;
+      }
+
+      const dbRef = ref(database, 'compras/' + purchaseCode);
+      get(dbRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const purchaseData = snapshot.val();
+          displayPurchaseDetails(purchaseData);
+        } else {
+          alert('Código de compra no encontrado.');
+        }
+      }).catch((error) => {
+        console.error('Error al consultar la compra:', error);
+      });
+    }
+
+    // Función para mostrar los detalles de la compra
+    function displayPurchaseDetails(purchaseData) {
+      const detailsContainer = document.getElementById('purchase-details');
+      detailsContainer.innerHTML = `
+        <h3>Detalles de la Compra (Código: ${purchaseData.code})</h3>
+        <p><strong>Total:</strong> ${purchaseData.total}</p>
+        <p><strong>Fecha:</strong> ${new Date(purchaseData.date).toLocaleString()}</p>
+        <h4>Productos Comprados:</h4>
+        <ul>
+          ${purchaseData.items.map(item => `
+            <li>${item.name} (Cantidad: ${item.quantity}) - Precio: ${item.price * item.quantity}</li>
+          `).join('')}
+        </ul>
+      `;
+    }
+
+    window.checkPurchase = checkPurchase;
+  </script>
+  <style>
+    /* Estilos de la interfaz de consulta */
+    #purchase-details {
+      margin-top: 20px;
+    }
+
+    #purchase-details ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #purchase-details li {
+      margin-bottom: 10px;
+    }
+
+    /* Estilos de los inputs */
+    input[type="text"] {
+      padding: 8px;
+      width: 200px;
+      margin-bottom: 10px;
+    }
+
+    /* Estilos de los botones */
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>Consulta de Compra</h1>
+
+  <button onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
+
+  <h2>Consulta con Código de Compra</h2>
+  <label for="purchase-code">Código de compra:</label>
+  <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
+  <button onclick="checkPurchase()">Consultar Compra</button>
+
+  <div id="purchase-details"></div>
+</body>
+</html>
