@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles2.css">
-  <title>Panel de Cliente</title>
+  <title>Consulta de Compra</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
@@ -46,14 +46,28 @@
     // Función para mostrar los detalles de la compra
     function displayPurchaseDetails(purchaseData) {
       const detailsContainer = document.getElementById('purchase-details');
+      const formattedDate = new Date(purchaseData.date).toLocaleString();
+
+      // Calculamos el total sin decimales
+      const totalWithoutDecimals = Math.floor(purchaseData.total);
+
+      // Crear el detalle de la compra
       detailsContainer.innerHTML = `
-        <h3>Detalles de la Compra (Código: ${purchaseData.code})</h3>
-        <p><strong>Total:</strong> ${purchaseData.total}</p>
-        <p><strong>Fecha:</strong> ${new Date(purchaseData.date).toLocaleString()}</p>
+        <div class="purchase-header">
+          <h3>Detalles de la Compra</h3>
+          <p><strong>Código de Compra:</strong> ${purchaseData.code}</p>
+          <p><strong>Fecha:</strong> ${formattedDate}</p>
+          <p><strong>Total de la Compra:</strong> <span class="total-price">$${totalWithoutDecimals}</span></p>
+        </div>
+        
         <h4>Productos Comprados:</h4>
-        <ul>
+        <ul class="purchase-items">
           ${purchaseData.items.map(item => `
-            <li>${item.name} (Cantidad: ${item.quantity}) - Precio: ${item.price * item.quantity}</li>
+            <li class="purchase-item">
+              <span><strong>Producto:</strong> ${item.name}</span>
+              <span><strong>Cantidad:</strong> ${item.quantity}</span>
+              <span><strong>Total:</strong> $${Math.floor(item.price * item.quantity)}</span>
+            </li>
           `).join('')}
         </ul>
       `;
@@ -62,52 +76,123 @@
     window.checkPurchase = checkPurchase;
   </script>
   <style>
-    /* Estilos de la interfaz de consulta */
-    #purchase-details {
-      margin-top: 20px;
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #000;  /* Fondo negro */
+      color: #fff;  /* Texto blanco */
     }
 
-    #purchase-details ul {
-      list-style: none;
-      padding: 0;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
     }
 
-    #purchase-details li {
-      margin-bottom: 10px;
-    }
-
-    /* Estilos de los inputs */
-    input[type="text"] {
-      padding: 8px;
-      width: 200px;
-      margin-bottom: 10px;
-    }
-
-    /* Estilos de los botones */
     button {
       padding: 10px 15px;
       background-color: #4CAF50;
       color: white;
       border: none;
       cursor: pointer;
+      margin: 5px;
+      font-size: 16px;
     }
 
     button:hover {
       background-color: #45a049;
     }
+
+    /* Estilos de la barra de navegación */
+    .btn-login {
+      background-color: #f44336;
+      color: white;
+      font-size: 14px;
+    }
+
+    /* Estilos del formulario */
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Centrado del botón de consulta */
+    .form-container {
+      text-align: center;
+    }
+
+    .purchase-header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .purchase-header p {
+      margin: 5px 0;
+    }
+
+    .total-price {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #f11d06;
+    }
+
+    .purchase-items {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .purchase-item {
+      background-color: #333;  /* Fondo gris oscuro para los productos */
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .purchase-item span {
+      display: block;
+      margin: 5px 0;
+    }
+
+    .purchase-item strong {
+      color: #ffffff;
+    }
+
+    /* Estilos del contenedor de detalles de la compra */
+    #purchase-details {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Barra de navegación -->
   <button class="btn-login" onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
   <button class="btn-login" onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
 
   <h1>Consulta de Compra</h1>
 
-  <h2>Consulta con Código de Compra</h2>
-  <label for="purchase-code">Código de compra:</label>
-  <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
-  <button onclick="checkPurchase()">Consultar Compra</button>
+  <!-- Formulario para ingresar código de compra -->
+  <div class="form-container">
+    <h2>Consulta con Código de Compra</h2>
+    <label for="purchase-code">Código de compra:</label>
+    <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
+    <button onclick="checkPurchase()">Consultar Compra</button>
+  </div>
 
+  <!-- Contenedor para mostrar los detalles de la compra -->
   <div id="purchase-details"></div>
+
 </body>
 </html>
