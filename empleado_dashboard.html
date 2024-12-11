@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles2.css">
+  <title>Panel de Empleado - Carrito de Compras</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getDatabase, ref, get, update, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
+      authDomain: "crud-18998.firebaseapp.com",
+      projectId: "crud-18998",
+      storageBucket: "crud-18998.firebasestorage.app",
+      messagingSenderId: "1046471634199",
+      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    let cart = []; // Carrito de compras
+
+    // Función para cargar los productos desde Firebase
+    function loadProducts() {
+      const dbRef = ref(database, 'productos/');
+      get(dbRef).then((snapshot) => {
+        const productList = snapshot.exists() ? snapshot.val() : {};
+        const listContainer = document.getElementById('product-list');
+        listContainer.innerHTML = '';
+        for (let id in productList) {
+          const product = productList[id];
+          const listItem = document.createElement('li');
+          listItem.innerHTML = `
+            <div class="product-info">
+              <strong>Nombre:</strong> ${product.name}<br>
+              <strong>Descripción:</strong> ${product.description}<br>
+              <strong>Precio:</strong> ${product.price}<br>
+              <strong>Stock:</strong> ${product.stock}<br>
+            </div>
+            <div class="button-container">
+              <button onclick="addToCart('${id}')">Agregar al Carrito</button>
+            </div>`;
+          listContainer.appendChild(listItem);
+        }
+      }).catch((error) => {
+        console.error('Error al cargar los productos:', error);
+      });
+    }
+
+    // Función para agregar un producto al carrito
+    function addToCart(id) {
+      const dbRef = ref(database, 'productos/' + id);
+      get(dbRef).then((snapshot) => {
+        const product = snapshot.val();
+        if (product && product.stock > 0) {
+          // Si el producto ya está en el carrito, aumentamos la cantidad
+          const existingProduct = cart.find(item => item.id === id);
+          if (existingProduct) {
+            existingProduct.quantity++;
+          } else {
+            cart.push({ ...product, id, quantity: 1 });
+          }
+          alert(`${product.name} agregado al carrito.`);
+          updateCartDisplay();
+        } else {
+          alert('El producto no está disponible o está agotado.');
+        }
+      });
+    }
+
+    // Función para mostrar el carrito de compras
+    function updateCartDisplay() {
+      const cartContainer = document.getElementById('cart-list');
+      cartContainer.innerHTML = '';
+      cart.forEach(item => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <div class="cart-item">
+            <strong>Producto:</strong> ${item.name}<br>
+            <strong>Cantidad:</strong> ${item.quantity}<br>
+            <strong>Precio:</strong> ${item.price * item.quantity}
+          </div>`;
+        cartContainer.appendChild(listItem);
+      });
+      document.getElementById('cart-total').textContent = `Total: ${getCartTotal()}`;
+    }
+
+    // Función para obtener el total del carrito
+    function getCartTotal() {
+      return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
+
+    // Función para realizar la compra
+    function checkout() {
+      if (cart.length === 0) {
+        alert('El carrito está vacío.');
+        return;
+      }
+      
+      const purchaseCode = generatePurchaseCode();
+      const purchaseData = {
+        code: purchaseCode,
+        items: cart.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: getCartTotal(),
+        date: new Date().toISOString()
+      };
+
+      // Descontar el stock en Firebase
+      cart.forEach(item => {
+        const dbRef = ref(database, 'productos/' + item.id);
+        get(dbRef).then((snapshot) => {
+          const product = snapshot.val();
+          if (product) {
+            const newStock = product.stock - item.quantity;
+            if (newStock < 0) {
+              alert(`No hay suficiente stock para el producto ${item.name}.`);
+            } else {
+              // Actualizar el stock del producto en Firebase
+              update(dbRef, { stock: newStock }).then(() => {
+                console.log(`Stock actualizado para ${item.name}: ${newStock}`);
+              }).catch((error) => {
+                console.error(`Error al actualizar el stock de ${item.name}:`, error);
+              });
+            }
+          }
+        });
+      });
+
+      // Guardar la compra en la base de datos
+      const purchaseRef = ref(database, 'compras/' + purchaseCode);
+      set(purchaseRef, purchaseData).then(() => {
+        alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
+        document.getElementById('purchase-code').textContent = `Código de compra: ${purchaseCode}`;
+        cart = []; // Limpiar carrito
+        updateCartDisplay();
+        clearCartForm(); // Limpiar los campos del carrito
+      }).catch((error) => {
+        console.error('Error al realizar la compra:', error);
+      });
+    }
+
+    // Función para generar un código único de compra con un máximo de 4 dígitos numéricos
+    function generatePurchaseCode() {
+      return Math.floor(Math.random() * 10000);  // Generar un número aleatorio entre 0 y 9999
+    }
+
+    // Limpiar los campos del carrito
+    function clearCartForm() {
+      document.getElementById('cart-list').innerHTML = ''; // Limpiar los productos en el carrito
+      document.getElementById('cart-total').textContent = 'Total: 0'; // Limpiar total
+    }
+
+    window.addToCart = addToCart;
+    window.checkout = checkout;
+
+    window.onload = loadProducts;
+  </script>
+  <style>
+    /* Estilos del carrito */
+    .cart-item {
+      margin-bottom: 10px;
+    }
+
+    #cart-total {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    /* Ajustes de la interfaz */
+    .button-container {
+      margin-top: 10px;
+    }
+    #product-list {
+      list-style: none;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Panel de Empleado - Carrito de Compras</h1>
+
+  <!-- Botón para volver al inicio -->
+  <button onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
+
+  <h2>Lista de Productos</h2>
+  <ul id="product-list"></ul>
+
+  <h2>Carrito de Compras</h2>
+  <ul id="cart-list"></ul>
+  <p id="cart-total">Total: 0</p>
+  <button onclick="checkout()">Realizar Compra</button>
+
+  <h3 id="purchase-code" style="color: green;"></h3>
+</body>
+</html>

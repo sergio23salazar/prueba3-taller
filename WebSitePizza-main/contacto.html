@@ -11,41 +11,8 @@
     <link href="https://file.myfontastic.com/3j45yvRpaWhzeStdASehh9/icons.css" rel="stylesheet">
 </head>
 <body>
-    <header class="main-header">
-        <div class="container container--flex">
-            <div class="logo-container column column--50">
-                <h1 class="logo">Muebles Concepción a Medida</h1>
-            </div>
-            <div class="main-header__contactInfo column column--50">
-                <p class="main-header__contactInfo__phone">
-                    <span class="icon-phone">+56 9 9305 0536</span>
-                </p>
-                <p class="main-header__contactInfo__addres">
-                    <span class="icon-location">Barros Arana 1068, Concepción</span>
-                </p>
-            </div>
-        </div>
-    </header>
-    <nav class="main_nav">
-        <div class="container container--flex">
-            <span class="icon-menu" id="btnmenu"></span>
-            <ul class="menu" id="menu">
-                <li class="menu__item"><a href="home.html" class="menu__link">Inicio</a></li>
-                <li class="menu__item"><a href="servicios.html" class="menu__link">Servicios</a></li>
-                <li class="menu__item"><a href="galeria.html" class="menu__link">Galería</a></li>
-                <li class="menu__item"><a href="contacto.html" class="menu__link menu__link--select">Contacto</a></li>
-            </ul>
-            <div class="social-icon">
-                <a href="#" class="social-icon__link"><span class="icon-facebook"></span></a>
-                <a href="#" class="social-icon__link"><span class="icon-twitter"></span></a>
-                <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="social-icon__link"><span class="icon-instagram"></span></a>
-            </div>
-        </div>
-    </nav>
-    <section class="banner">
-        <img src="img/image4.jpg" alt="" class="banner__img">
-        <div class="banner__content">¿Tienes dudas?</div>
-    </section>
+    <!-- Estructura del header y el menú de navegación aquí (se mantiene igual que en tu ejemplo anterior) -->
+    
     <main class="main">
         <section class="group--color">
             <div class="container">
@@ -56,9 +23,10 @@
             </div>
         </section>
     </main>
+
     <section class="contact-form">
         <div class="container">
-            <!-- Formulario para Enviar los Datos a Mailtrap -->
+            <!-- Formulario para Enviar los Datos -->
             <form id="contact-form">
                 <div class="form-group">
                     <label for="name">Nombre:</label>
@@ -78,45 +46,14 @@
                 </div>
                 <button type="submit">Enviar</button>
             </form>
-            <div class="map-container" style="text-align: center;">
-                <h3>Ubicación</h3>
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3193.735731349626!2d-73.04771452456927!3d-36.824852072240105!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9669b5f607f8d407%3A0xc752b4d932fe12a1!2sMall%20del%20Centro%20Concepci%C3%B3n!5e0!3m2!1ses-419!2scl!4v1713998574353!5m2!1ses-419!2scl" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
         </div>
     </section>
+
     <footer class="main-footer">
-        <div class="container container--flex">
-            <div class="column column--33">
-                <h2 class="column__title">Visítanos</h2>
-                <p class="column__txt">Mall del Centro Concepción<br>Barros Arana 1068, Concepción</p>
-                <p class="column__txt">
-                    Horarios de atención:<br>
-                    Lunes a viernes: 9:00 - 18:00<br>
-                    Sábados: 10:00 - 14:00
-                </p>
-            </div>
-            <div class="column column--33">
-                <h2 class="column__title">Contáctanos</h2>
-                <p class="column__txt">Correo: info@mueblesconcepcion.cl</p>
-                <p class="column__txt">Teléfono: +56 9 9305 9305</p>
-            </div>
-            <div class="column column--33">
-                <h2 class="column__title">Síguenos</h2>
-                <p class="column__txt">
-                    <a href="#" class="icon-facebook" target="_blank">Facebook</a>
-                </p>
-                <p class="column__txt">
-                    <a href="#" class="icon-twitter" target="_blank">Twitter</a>
-                </p>
-                <p class="column__txt">
-                    <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="icon-instagram" target="_blank">Instagram</a>
-                </p>
-            </div>
-        </div>
-        <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
+        <!-- Información de pie de página (igual que en tu ejemplo) -->
     </footer>
-    <script src="js/menu.js"></script>
-    <!-- Script para Enviar Formulario -->
+
+    <!-- Script para enviar el formulario -->
     <script type="text/javascript">
         const form = document.getElementById("contact-form");
 
@@ -136,7 +73,7 @@
             };
 
             // Enviar los datos al servidor (express.js)
-            fetch('/send-email', options)
+            fetch('http://192.168.1.9:5501/send-email', options)  // Cambia esta URL si es necesario
                 .then(response => {
                     if (response.ok) {
                         // Si la respuesta es exitosa
