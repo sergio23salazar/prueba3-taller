@@ -33,12 +33,15 @@
         for (let id in productList) {
           const product = productList[id];
           const listItem = document.createElement('li');
+          listItem.id = `product-${id}`; // Asignamos un ID único para cada producto
           listItem.innerHTML = `
             <div class="product-info">
               <strong>Nombre:</strong> ${product.name}<br>
               <strong>Descripción:</strong> ${product.description}<br>
               <strong>Precio:</strong> ${product.price}<br>
-              <strong>Stock:</strong> ${product.stock}<br>
+              <strong>Stock:</strong> <span id="stock-${id}">${product.stock}</span><br>
+              <label for="quantity-${id}">Cantidad:</label>
+              <input type="number" id="quantity-${id}" min="1" max="${product.stock}" value="1">
             </div>
             <div class="button-container">
               <button onclick="addToCart('${id}')">Agregar al Carrito</button>
@@ -52,23 +55,54 @@
 
     // Función para agregar un producto al carrito
     function addToCart(id) {
+      const quantityInput = document.getElementById(`quantity-${id}`);
+      const quantity = parseInt(quantityInput.value);
+
+      if (isNaN(quantity) || quantity <= 0) {
+        alert('Por favor, ingrese una cantidad válida.');
+        return;
+      }
+
       const dbRef = ref(database, 'productos/' + id);
       get(dbRef).then((snapshot) => {
         const product = snapshot.val();
-        if (product && product.stock > 0) {
+        if (product && product.stock >= quantity) {
           // Si el producto ya está en el carrito, aumentamos la cantidad
           const existingProduct = cart.find(item => item.id === id);
           if (existingProduct) {
-            existingProduct.quantity++;
+            existingProduct.quantity += quantity;
           } else {
-            cart.push({ ...product, id, quantity: 1 });
+            cart.push({ ...product, id, quantity });
           }
+
+          // Actualizamos el stock en la interfaz (solo en frontend)
+          updateProductStockInFrontend(id, product.stock - quantity);
+
           alert(`${product.name} agregado al carrito.`);
           updateCartDisplay();
         } else {
-          alert('El producto no está disponible o está agotado.');
+          alert(`No hay suficiente stock para el producto ${product.name}. Solo hay ${product.stock} disponibles.`);
         }
       });
+    }
+
+    // Función para eliminar un producto del carrito
+    function removeFromCart(id) {
+      // Buscar el producto en el carrito
+      const productToRemove = cart.find(item => item.id === id);
+      cart = cart.filter(item => item.id !== id);
+
+      // Restauramos el stock en la interfaz
+      updateProductStockInFrontend(id, productToRemove.stock);
+
+      // Actualizamos la vista del carrito
+      updateCartDisplay();
+    }
+
+    // Función para actualizar el stock del producto en la interfaz (solo en frontend)
+    function updateProductStockInFrontend(id, newStock) {
+      const stockElement = document.getElementById(`stock-${id}`);
+      stockElement.textContent = newStock;
     }
 
     // Función para mostrar el carrito de compras
@@ -82,6 +116,7 @@
             <strong>Producto:</strong> ${item.name}<br>
             <strong>Cantidad:</strong> ${item.quantity}<br>
             <strong>Precio:</strong> ${item.price * item.quantity}
+            <button onclick="removeFromCart('${item.id}')">Eliminar</button>
           </div>`;
         cartContainer.appendChild(listItem);
       });
@@ -99,7 +134,7 @@
         alert('El carrito está vacío.');
         return;
       }
-      
+
       const purchaseCode = generatePurchaseCode();
       const purchaseData = {
         code: purchaseCode,
@@ -112,32 +147,28 @@
         date: new Date().toISOString()
       };
 
-      // Descontar el stock en Firebase
-      cart.forEach(item => {
-        const dbRef = ref(database, 'productos/' + item.id);
-        get(dbRef).then((snapshot) => {
-          const product = snapshot.val();
-          if (product) {
-            const newStock = product.stock - item.quantity;
-            if (newStock < 0) {
-              alert(`No hay suficiente stock para el producto ${item.name}.`);
-            } else {
-              // Actualizar el stock del producto en Firebase
+      // Guardar la compra en la base de datos
+      const purchaseRef = ref(database, 'compras/' + purchaseCode);
+      set(purchaseRef, purchaseData).then(() => {
+        alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
+        document.getElementById('purchase-code').textContent = `Código de compra: ${purchaseCode}`;
+
+        // Ahora actualizamos el stock en la base de datos
+        cart.forEach(item => {
+          const dbRef = ref(database, 'productos/' + item.id);
+          get(dbRef).then((snapshot) => {
+            const product = snapshot.val();
+            if (product) {
+              const newStock = product.stock - item.quantity;
               update(dbRef, { stock: newStock }).then(() => {
                 console.log(`Stock actualizado para ${item.name}: ${newStock}`);
               }).catch((error) => {
                 console.error(`Error al actualizar el stock de ${item.name}:`, error);
               });
             }
-          }
+          });
         });
-      });
 
-      // Guardar la compra en la base de datos
-      const purchaseRef = ref(database, 'compras/' + purchaseCode);
-      set(purchaseRef, purchaseData).then(() => {
-        alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
-        document.getElementById('purchase-code').textContent = `Código de compra: ${purchaseCode}`;
         cart = []; // Limpiar carrito
         updateCartDisplay();
         clearCartForm(); // Limpiar los campos del carrito
@@ -158,6 +189,7 @@
     }
 
     window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
     window.checkout = checkout;
 
     window.onload = loadProducts;
@@ -181,6 +213,10 @@
     #product-list {
       list-style: none;
       padding: 0;
+    }
+    #product-list input[type="number"] {
+      width: 50px;
+      margin-left: 10px;
     }
   </style>
 </head>
