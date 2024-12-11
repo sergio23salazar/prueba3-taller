@@ -195,35 +195,98 @@
     window.onload = loadProducts;
   </script>
   <style>
-    /* Estilos del carrito */
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      margin: 0;
+      padding: 20px;
+      color: white;
+    }
+
+    /* Botones */
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Encabezados */
+    h1, h2, h3 {
+      text-align: center;
+      color: white;
+    }
+
+    /* Lista de productos */
+    #product-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .product-info {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      margin-bottom: 15px;
+    }
+
+    .product-info strong {
+      display: inline-block;
+      width: 100px;
+    }
+
+    .product-info input[type="number"] {
+      width: 60px;
+      padding: 5px;
+      margin-left: 10px;
+    }
+
+    .button-container {
+      text-align: right;
+    }
+
+    /* Carrito de compras */
+    #cart-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
     .cart-item {
+      background-color: #444;
+      padding: 15px;
       margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
     #cart-total {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       margin-top: 20px;
+      text-align: center;
     }
 
-    /* Ajustes de la interfaz */
-    .button-container {
-      margin-top: 10px;
-    }
-    #product-list {
-      list-style: none;
-      padding: 0;
-    }
-    #product-list input[type="number"] {
-      width: 50px;
-      margin-left: 10px;
+    /* Centrado del botón de realizar compra */
+    .checkout-container {
+      text-align: center;
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
   <button class="btn-login" onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
   <button class="btn-login" onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
-  
+
   <h1>Panel de Empleado</h1>
 
   <h2>Lista de Productos</h2>
@@ -232,7 +295,9 @@
   <h2>Carrito de Compras</h2>
   <ul id="cart-list"></ul>
   <p id="cart-total">Total: 0</p>
-  <button onclick="checkout()">Realizar Compra</button>
+  <div class="checkout-container">
+    <button onclick="checkout()">Realizar Compra</button>
+  </div>
 
   <h3 id="purchase-code" style="color: green;"></h3>
 </body>
