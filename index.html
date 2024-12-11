@@ -250,14 +250,10 @@
   <form id="product-form">
     <button onclick="window.location.href='WebSitePizza-main/home.html'">Volver a Inicio</button>
     <input type="hidden" id="product-id" />
-    <label for="product-name">Nombre:</label>
-    <input type="text" id="product-name" required />
-    <label for="product-description">Descripción:</label>
-    <textarea id="product-description" required></textarea>
-    <label for="product-price">Precio:</label>
-    <input type="number" id="product-price" required />
-    <label for="product-stock">Stock:</label>
-    <input type="number" id="product-stock" required />
+    <input type="text" id="product-name" placeholder="Nombre" required/>
+    <textarea id="product-description" placeholder="Descripción" required></textarea>
+    <input type="number" id="product-price" placeholder="Precio" required />
+    <input type="number" id="product-stock" placeholder="Stock" required />
 
     <!-- Opciones para seleccionar descuento y/o promoción -->
     <div class="checkbox-container">
@@ -273,14 +269,12 @@
 
     <!-- Campo de descuento -->
     <div>
-      <label for="product-discount">Descuento (%):</label>
-      <input type="number" id="product-discount" disabled />
+      <input type="number" id="product-discount" placeholder="Descuento (%)" disabled />
     </div>
 
     <!-- Campo de promoción -->
     <div>
-      <label for="product-promotion">Promoción:</label>
-      <input type="text" id="product-promotion" disabled />
+      <input type="text" id="product-promotion" placeholder="Promoción" disabled />
     </div>
 
     <!-- Mensaje de advertencia -->
