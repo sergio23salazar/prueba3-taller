@@ -32,6 +32,27 @@ h1,h2,h3,h4,h5{
     width: 100%;
 }
 
+.btn-login {
+    display: inline-block; /* Para que se comporte como un botón */
+    text-align: center; /* Centra el texto */
+    text-decoration: none; /* Sin subrayado */
+    background-color: #fdc62d; /* Color de fondo */
+    color: #000000; /* Color del texto */
+    padding: 10px 20px; /* Espaciado interno */
+    border: none; /* Sin borde */
+    border-radius: 5px; /* Bordes redondeados */
+    font-size: 1em; /* Tamaño de fuente */
+    cursor: pointer; /* Cambia el cursor al pasar el mouse */
+    transition: background-color 0.3s; /* Transición suave para el color de fondo */
+    margin-left: 10px; /* Espacio a la izquierda del botón */
+    margin-right: 10px; /* Espacio a la derecha del botón */
+}
+
+.btn-login:hover {
+    background-color: #de423a; /* Color de fondo al pasar el mouse */
+    color: #ffffff; /* Color del texto al pasar el mouse */
+}
+
 /*----------------Estilos Header------------------*/
 
 
