@@ -39,7 +39,7 @@
                 <a href="#" class="social-icon__link"><span class="icon-facebook"></span></a>
                 <a href="#" class="social-icon__link"><span class="icon-twitter"></span></a>
                 <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="social-icon__link"><span class="icon-instagram"></span></a>
-                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>            </div>
+                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>            
             </div>
         </div>
     </nav>
@@ -59,7 +59,8 @@
     </main>
     <section class="contact-form">
         <div class="container">
-            <form action="your_form_processing_script.php" method="post">
+            <!-- Formulario de contacto -->
+            <form id="contactForm">
                 <div class="form-group">
                     <label for="name">Nombre:</label>
                     <input type="text" id="name" name="name" required>
@@ -78,9 +79,15 @@
                 </div>
                 <button type="submit">Enviar</button>
             </form>
+
+            <!-- Mensaje de éxito -->
+            <div id="successMessage" style="display: none; text-align: center; color: green; margin-top: 20px;">
+                <h3>Mensaje enviado con éxito</h3>
+            </div>
+
             <div class="map-container" style="text-align: center;">
                 <h3>Ubicación</h3>
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3193.735731349626!2d-73.04771452456927!3d-36.824852072240105!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9669b5f607f8d407%3A0xc752b4d932fe12a1!2sMall%20del%20Centro%20Concepci%C3%B3n!5e0!3m2!1ses-419!2scl!4v1713998574353!5m2!1ses-419!2scl" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
             </div>
         </div>
     </section>
@@ -116,5 +123,37 @@
         <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
     </footer>
     <script src="js/menu.js"></script>
+
+    <!-- Script para manejar el envío del formulario con EmailJS -->
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script>
+        (function(){
+            emailjs.init("R-0jcje2_DjvFX6pi");  // Inicializamos EmailJS con tu public key
+        })();
+
+        document.getElementById('contactForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevenir el comportamiento de envío predeterminado del formulario
+
+            // Recoger los datos del formulario
+            const formData = new FormData(this);
+
+            // Enviar el formulario utilizando EmailJS
+            emailjs.sendForm('service_ebv6qq6', 'template_tjkanwt', this)
+            .then(function(response) {
+                console.log('Mensaje enviado', response);
+                // Mostrar mensaje de éxito
+                document.getElementById('successMessage').style.display = 'block';
+                // Limpiar el formulario
+                document.getElementById('contactForm').reset();
+                // Ocultar el mensaje después de 2 segundos
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 2000);
+            }, function(error) {
+                console.log('Error al enviar el mensaje', error);
+                alert('Hubo un problema al enviar el mensaje. Intenta nuevamente.');
+            });
+        });
+    </script>
 </body>
 </html>
