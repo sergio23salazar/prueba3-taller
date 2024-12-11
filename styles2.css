@@ -18,7 +18,7 @@ body {
   padding: 20px; /* Agrega relleno a la página */
 }
 
-.btn-login {
+.btn-login { /*Panel de Empleado*/
   display: inline-block; /* Para que se comporte como un botón */
   text-align: center; /* Centra el texto */
   text-decoration: none; /* Sin subrayado */
@@ -38,7 +38,7 @@ body {
 
 }
 
-.btn-login2 {
+.btn-login2 { /*Panel de Cliente*/
   display: inline-block; /* Para que se comporte como un botón */
   text-align: center; /* Centra el texto */
   text-decoration: none; /* Sin subrayado */
