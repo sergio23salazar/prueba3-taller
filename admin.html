@@ -351,5 +351,51 @@ function closeNotificationWindow() {
   <ul id="product-list"></ul>
 
   <div id="low-stock-warning"></div>
+  <h1>Generar Informe de Ventas</h1>
+  <form id="reportForm">
+    <label for="startDate">Fecha de Inicio:</label>
+    <input type="date" id="startDate" name="startDate" required>
+    <br>
+    <label for="endDate">Fecha de Fin:</label>
+    <input type="date" id="endDate" name="endDate" required>
+    <br>
+    <label for="format">Formato:</label>
+    <select id="format" name="format" required>
+      <option value="pdf">PDF</option>
+      <option value="excel">Excel</option>
+    </select>
+    <br>
+    <button type="submit">Generar Informe</button>
+  </form>
+
+  <script>
+    document.getElementById('reportForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const format = document.getElementById('format').value;
+
+      
+      fetch('/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ startDate, endDate, format })
+      })
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `report.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => console.error('Error:', error));
+    });
+  </script>
 </body>
 </html>
