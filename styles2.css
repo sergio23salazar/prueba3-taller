@@ -18,6 +18,60 @@ body {
   padding: 20px; /* Agrega relleno a la página */
 }
 
+.center-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #fdc62d;
+  cursor: pointer;
+}
+
+.img {
+  width: 20px;
+  height: 20px;
+}
+
+.notification-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #333;
+  border: 1px solid #fdc62d;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  color: #fff; /* Establece el color del texto */
+}
+
+.notification-window h2 {
+  margin-top: 0;
+}
+
+.notification-window ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-window li {
+  margin-bottom: 10px;
+}
+
+.notification-window button {
+  background-color: #fdc62d;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.notification-window button:hover {
+  background-color: #d93b2a;
+}
+
 .btn-login { /*Panel de Empleado*/
   display: inline-block; /* Para que se comporte como un botón */
   text-align: center; /* Centra el texto */

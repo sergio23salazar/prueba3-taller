@@ -54,57 +54,98 @@
       });
     }
 
-    // Función para cargar todos los productos
-    function loadProducts() {
-      const dbRef = ref(database, 'productos/');
-      get(dbRef).then((snapshot) => {
-        const productList = snapshot.exists() ? snapshot.val() : {};
-        const listContainer = document.getElementById('product-list');
-        const lowStockContainer = document.getElementById('low-stock-warning');
-        listContainer.innerHTML = '';
-        lowStockContainer.innerHTML = '';
+// Función para cargar todos los productos
+function loadProducts() {
+  const dbRef = ref(database, 'productos/');
+  get(dbRef).then((snapshot) => {
+    const productList = snapshot.exists() ? snapshot.val() : {};
+    const listContainer = document.getElementById('product-list');
+    const lowStockContainer = document.getElementById('low-stock-warning');
+    listContainer.innerHTML = '';
+    lowStockContainer.innerHTML = '';
 
-        let lowStockAlert = '';
+    let lowStockAlert = '';
 
-        // Iteramos sobre los productos cargados
-        for (let id in productList) {
-          const product = productList[id];
-          const listItem = document.createElement('li');
-          let discountText = product.discount ? ` - Descuento: ${product.discount}%` : '';
-          let promotionText = product.promotion ? ` - Promoción: ${product.promotion}` : '';
+    // Iteramos sobre los productos cargados
+    for (let id in productList) {
+      const product = productList[id];
+      const listItem = document.createElement('li');
+      let discountText = product.discount ? ` - Descuento: ${product.discount}%` : '';
+      let promotionText = product.promotion ? ` - Promoción: ${product.promotion}` : '';
 
-          // Agregamos los productos a la lista
-          listItem.innerHTML = `
-            <div class="product-info">
-              <strong>Nombre:</strong> ${product.name}<br>
-              <strong>Descripción:</strong> ${product.description}<br>
-              <strong>Precio:</strong> ${product.price}<br>
-              <strong>Stock:</strong> ${product.stock}<br>
-              ${discountText} ${promotionText}
-            </div>
-            <div class="button-container">
-              <button onclick="editProduct('${id}')">Editar</button>
-              <button onclick="deleteProduct('${id}')">Eliminar</button>
-            </div>`;
-          listContainer.appendChild(listItem);
+      // Agregamos los productos a la lista
+      listItem.innerHTML = `
+        <div class="product-info">
+          <strong>Nombre:</strong> ${product.name}<br>
+          <strong>Descripción:</strong> ${product.description}<br>
+          <strong>Precio:</strong> ${product.price}<br>
+          <strong>Stock:</strong> ${product.stock}<br>
+          ${discountText} ${promotionText}
+        </div>
+        <div class="button-container">
+          <button onclick="editProduct('${id}')">Editar</button>
+          <button onclick="deleteProduct('${id}')">Eliminar</button>
+        </div>`;
+      listContainer.appendChild(listItem);
 
-          // Alertamos si el stock es bajo
-          if (product.stock < MIN_STOCK) {
-            lowStockAlert += `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`;
-          }
-        }
-
-        if (lowStockAlert) {
-          lowStockContainer.innerHTML = `
-            <h3>Productos con stock bajo:</h3>
-            <ul>${lowStockAlert}</ul>
-          `;
-        }
-      }).catch((error) => {
-        console.error('Error al cargar los productos:', error);
-      });
+      // Alertamos si el stock es bajo
+      if (product.stock < MIN_STOCK) {
+        lowStockAlert += `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`;
+      }
     }
 
+    if (lowStockAlert) {
+      lowStockContainer.innerHTML = `
+        <h3>Productos con stock bajo:</h3>
+        <ul>${lowStockAlert}</ul>
+      `;
+    }
+  }).catch((error) => {
+    console.error('Error al cargar los productos:', error);
+  });
+}
+
+// Función para mostrar notificaciones de productos con stock bajo
+function showLowStockNotifications() {
+  const dbRef = ref(database, 'productos/');
+  get(dbRef).then((snapshot) => {
+    const productList = snapshot.exists() ? snapshot.val() : {};
+    const lowStockProducts = [];
+
+    // Iteramos sobre los productos cargados
+    for (let id in productList) {
+      const product = productList[id];
+      if (product.stock < MIN_STOCK) {
+        lowStockProducts.push(product);
+      }
+    }
+
+    // Mostramos las notificaciones en una ventana emergente
+    if (lowStockProducts.length > 0) {
+      const notificationWindow = document.createElement('div');
+      notificationWindow.innerHTML = `
+        <h2>Notificaciones de Productos con Stock Bajo</h2>
+        <ul>
+          ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
+        </ul>
+        <button onclick="closeNotificationWindow()">Cerrar</button>
+      `;
+      notificationWindow.classList.add('notification-window');
+      document.body.appendChild(notificationWindow);
+    }
+  }).catch((error) => {
+    console.error('Error al cargar los productos:', error);
+  });
+}
+window.showLowStockNotifications = showLowStockNotifications;
+window.closeNotificationWindow = closeNotificationWindow;
+// Función para cerrar la ventana emergente de notificaciones
+function closeNotificationWindow() {
+  const notificationWindow = document.querySelector('.notification-window');
+  if (notificationWindow) {
+    notificationWindow.remove();
+  }
+}
     // Función para editar un producto
     function editProduct(id) {
       const dbRef = ref(database, 'productos/' + id);
@@ -250,9 +291,9 @@
 
   <!-- Formulario para agregar o editar un producto -->
   <form id="product-form">
+    <button class="center-button" onclick="showLowStockNotifications()"> <img src="notification3.png" alt="Notificación" class="img"> </button>    <input type="hidden" id="product-id" />
     <button onclick="window.location.href='../index.html'">Volver a Inicio</button>
     <button onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
-    <input type="hidden" id="product-id" />
     <input type="text" id="product-name" placeholder="Nombre" required/>
     <textarea id="product-description" placeholder="Descripción" required></textarea>
     <input type="number" id="product-price" placeholder="Precio" required />
