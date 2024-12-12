@@ -6,9 +6,11 @@
   <link rel="stylesheet" href="styles2.css">
   <title>Panel de Empleado</title>
   <script type="module">
+    // Importamos los módulos de Firebase necesarios
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, get, update, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
+    // Configuración de Firebase con las credenciales de tu proyecto
     const firebaseConfig = {
       apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
       authDomain: "crud-18998.firebaseapp.com",
@@ -18,18 +20,23 @@
       appId: "1:1046471634199:web:37309d7fd8825896755b52"
     };
 
+    // Inicializar la aplicación de Firebase
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    let cart = []; // Carrito de compras
+    // Carrito de compras (inicialmente vacío)
+    let cart = [];
 
     // Función para cargar los productos desde Firebase
     function loadProducts() {
       const dbRef = ref(database, 'productos/');
+      // Hacemos una lectura de la base de datos
       get(dbRef).then((snapshot) => {
-        const productList = snapshot.exists() ? snapshot.val() : {};
+        const productList = snapshot.exists() ? snapshot.val() : {};  // Si existen productos, obtenemos los datos
         const listContainer = document.getElementById('product-list');
-        listContainer.innerHTML = '';
+        listContainer.innerHTML = ''; // Limpiamos la lista de productos
+
+        // Iteramos sobre los productos y los mostramos en la interfaz
         for (let id in productList) {
           const product = productList[id];
           const listItem = document.createElement('li');
@@ -63,6 +70,7 @@
         return;
       }
 
+      // Obtenemos el producto de Firebase
       const dbRef = ref(database, 'productos/' + id);
       get(dbRef).then((snapshot) => {
         const product = snapshot.val();
@@ -75,7 +83,7 @@
             cart.push({ ...product, id, quantity });
           }
 
-          // Actualizamos el stock en la interfaz (solo en frontend)
+          // Actualizamos el stock del producto en la interfaz
           updateProductStockInFrontend(id, product.stock - quantity);
 
           alert(`${product.name} agregado al carrito.`);
@@ -88,18 +96,16 @@
 
     // Función para eliminar un producto del carrito
     function removeFromCart(id) {
-      // Buscar el producto en el carrito
       const productToRemove = cart.find(item => item.id === id);
       cart = cart.filter(item => item.id !== id);
 
-      // Restauramos el stock en la interfaz
+      // Restauramos el stock del producto en la interfaz
       updateProductStockInFrontend(id, productToRemove.stock);
 
-      // Actualizamos la vista del carrito
       updateCartDisplay();
     }
 
-    // Función para actualizar el stock del producto en la interfaz (solo en frontend)
+    // Función para actualizar el stock del producto en la interfaz
     function updateProductStockInFrontend(id, newStock) {
       const stockElement = document.getElementById(`stock-${id}`);
       stockElement.textContent = newStock;
@@ -123,7 +129,7 @@
       document.getElementById('cart-total').textContent = `Total: ${getCartTotal()}`;
     }
 
-    // Función para obtener el total del carrito
+    // Función para calcular el total del carrito
     function getCartTotal() {
       return cart.reduce((total, item) => total + item.price * item.quantity, 0);
     }
@@ -147,13 +153,13 @@
         date: new Date().toISOString()
       };
 
-      // Guardar la compra en la base de datos
+      // Guardar la compra en Firebase
       const purchaseRef = ref(database, 'compras/' + purchaseCode);
       set(purchaseRef, purchaseData).then(() => {
         alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
         document.getElementById('purchase-code').textContent = `Código de compra: ${purchaseCode}`;
 
-        // Ahora actualizamos el stock en la base de datos
+        // Actualizar el stock de los productos en la base de datos
         cart.forEach(item => {
           const dbRef = ref(database, 'productos/' + item.id);
           get(dbRef).then((snapshot) => {
@@ -177,21 +183,23 @@
       });
     }
 
-    // Función para generar un código único de compra con un máximo de 4 dígitos numéricos
+    // Función para generar un código único de compra
     function generatePurchaseCode() {
       return Math.floor(Math.random() * 10000);  // Generar un número aleatorio entre 0 y 9999
     }
 
     // Limpiar los campos del carrito
     function clearCartForm() {
-      document.getElementById('cart-list').innerHTML = ''; // Limpiar los productos en el carrito
+      document.getElementById('cart-list').innerHTML = ''; // Limpiar productos en el carrito
       document.getElementById('cart-total').textContent = 'Total: 0'; // Limpiar total
     }
 
+    // Asignamos las funciones a la ventana global para que se puedan usar en el HTML
     window.addToCart = addToCart;
     window.removeFromCart = removeFromCart;
     window.checkout = checkout;
 
+    // Cargar los productos cuando la página se cargue
     window.onload = loadProducts;
   </script>
   <style>
@@ -232,73 +240,43 @@
       padding: 0;
     }
 
+    #product-list li {
+      border-bottom: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    /* Producto */
     .product-info {
-      background-color: #333;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
-    .product-info strong {
-      display: inline-block;
-      width: 100px;
+    .cart-item {
+      border-bottom: 1px solid #ccc;
+      padding: 10px;
     }
 
-    .product-info input[type="number"] {
-      width: 60px;
-      padding: 5px;
-      margin-left: 10px;
-    }
-
-    .button-container {
-      text-align: right;
-    }
-
-    /* Carrito de compras */
+    /* Contenedor de carrito */
     #cart-list {
       list-style-type: none;
       padding: 0;
     }
-
-    .cart-item {
-      background-color: #444;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    #cart-total {
-      font-size: 18px;
-      font-weight: bold;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    /* Centrado del botón de realizar compra */
-    .checkout-container {
-      text-align: center;
-      margin-top: 30px;
-    }
   </style>
 </head>
 <body>
-  <button class="btn-login" onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
-  <button class="btn-login" onclick="window.location.href='../index.html'">Volver a Inicio</button>
-
   <h1>Panel de Empleado</h1>
 
-  <h2>Lista de Productos</h2>
+  <!-- Lista de productos -->
+  <h2>Productos Disponibles</h2>
   <ul id="product-list"></ul>
 
+  <!-- Carrito de compras -->
   <h2>Carrito de Compras</h2>
   <ul id="cart-list"></ul>
   <p id="cart-total">Total: 0</p>
-  <div class="checkout-container">
-    <button onclick="checkout()">Realizar Venta</button>
-  </div>
 
-  <h3 id="purchase-code" style="color: #fdc62d;"></h3>
+  <!-- Botón de checkout -->
+  <button onclick="checkout()">Realizar Compra</button>
+
+  <p id="purchase-code"></p>
 </body>
 </html>
