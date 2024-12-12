@@ -22,8 +22,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    const MIN_STOCK = 20; // Stock mínimo
-    const MAX_STOCK = 100; // Stock máximo
+
 
     // Función para guardar o actualizar un producto
     function saveProduct(id, name, description, price, stock, discount, promotion) {
@@ -128,8 +127,6 @@ function showLowStockNotifications() {
         <h2>Notificaciones de Productos con Stock Bajo</h2>
         <div id="notification-options">
           <label>Notificaciones:</label>
-          <input type="checkbox" id="notification-switch" onchange="saveConfig()">
-          <span>Activar notificaciones</span>
         </div>
         <ul>
           ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
@@ -144,21 +141,10 @@ function showLowStockNotifications() {
   });
 }
 
-// Función para guardar la configuración de las notificaciones
-function saveConfig() {
-  const dbRef = ref(database, 'configuracion/');
-  const notificationSwitch = document.getElementById('notification-switch');
-  set(dbRef, {
-    notificaciones: notificationSwitch.checked
-  }).then(() => {
-    console.log('Configuración guardada con éxito');
-  }).catch((error) => {
-    console.error('Error al guardar la configuración:', error);
-  });
-}
 
 window.showLowStockNotifications = showLowStockNotifications;
 window.closeNotificationWindow = closeNotificationWindow;
+
 // Función para cerrar la ventana emergente de notificaciones
 function closeNotificationWindow() {
   const notificationWindow = document.querySelector('.notification-window');
@@ -312,6 +298,7 @@ function closeNotificationWindow() {
   <!-- Formulario para agregar o editar un producto -->
   <form id="product-form">
     <button class="center-button" onclick="showLowStockNotifications()"> <img src="notification3.png" alt="Notificación" class="img"> </button>    <input type="hidden" id="product-id" />
+    <button onclick="openPopup()">Abrir Configuración de Notificaciones</button>
     <button onclick="window.location.href='../index.html'">Volver a Inicio</button>
     <button onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
     <input type="text" id="product-name" placeholder="Nombre" required/>
@@ -397,5 +384,192 @@ function closeNotificationWindow() {
       .catch(error => console.error('Error:', error));
     });
   </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos</title>
+    <style>
+        /* Estilos para la ventana emergente */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .popup.open {
+            display: block;
+        }
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .popup-overlay.open {
+            display: block;
+        }
+        .close-btn {
+            background-color: #f44336;
+            color: rgb(255, 255, 255);
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            float: right;
+            border-radius: 50%;
+        }
+        .close-btn:hover {
+            background-color: #d32f2f;
+        }
+        .notification-window {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 20px;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Botón para abrir la configuración de notificaciones -->
+    <button onclick="openPopup()">Abrir Configuración de Notificaciones</button>
+
+    <!-- Fondo de la ventana emergente -->
+    <div class="popup-overlay" id="popupOverlay"></div>
+
+    <!-- Ventana emergente de configuración -->
+    <div class="popup" id="popup">
+        <button class="close-btn" onclick="closePopup()">×</button>
+        <h2>Configuración de Notificaciones</h2>
+        <form id="notificationSettingsForm">
+            <label>
+                <input type="checkbox" id="enableNotifications" checked>
+                Activar Notificaciones
+            </label><br><br>
+
+            <label>
+                Frecuencia de Notificaciones:
+                <select id="notificationFrequency">
+                    <option value="daily">Diarias</option>
+                    <option value="weekly">Semanales</option>
+                    <option value="monthly">Mensuales</option>
+                </select>
+            </label><br><br>
+
+            <label>
+                Estilo de Notificación:
+                <select id="notificationStyle">
+                    <option value="banner">Banner</option>
+                    <option value="popup">Ventana Emergente</option>
+                    <option value="email">Correo Electrónico</option>
+                </select>
+            </label><br><br>
+
+            <button type="button" onclick="saveSettings()">Guardar Configuración</button>
+        </form>
+        <br>
+        <!-- Botón para ver las notificaciones de bajo stock -->
+        <button onclick="showLowStockNotifications()">Ver Notificaciones de Stock Bajo</button>
+    </div>
+
+    <script>
+        const MIN_STOCK = 20; // Stock mínimo
+        const MAX_STOCK = 100; // Stock máximo
+
+        // Función para abrir la ventana emergente
+        function openPopup() {
+            document.getElementById('popup').classList.add('open');
+            document.getElementById('popupOverlay').classList.add('open');
+        }
+
+        // Función para cerrar la ventana emergente
+        function closePopup() {
+            document.getElementById('popup').classList.remove('open');
+            document.getElementById('popupOverlay').classList.remove('open');
+        }
+
+        // Función para guardar la configuración de notificaciones
+        function saveSettings() {
+            const enableNotifications = document.getElementById('enableNotifications').checked;
+            const notificationFrequency = document.getElementById('notificationFrequency').value;
+            const notificationStyle = document.getElementById('notificationStyle').value;
+
+            // Aquí puedes agregar el código para almacenar o procesar los ajustes
+            alert(`Configuración guardada:
+                Notificaciones: ${enableNotifications ? 'Activadas' : 'Desactivadas'}
+                Frecuencia: ${notificationFrequency}
+                Estilo: ${notificationStyle}
+            `);
+
+            closePopup(); // Cerrar la ventana emergente después de guardar
+        }
+
+        // Función para mostrar las notificaciones de productos con stock bajo
+        function showLowStockNotifications() {
+            const productList = {};
+
+            const lowStockProducts = [];
+            for (let id in productList) {
+                const product = productList[id];
+                if (product.stock < MIN_STOCK) {
+                    lowStockProducts.push(product);
+                }
+            }
+
+            if (lowStockProducts.length > 0) {
+                const notificationWindow = document.createElement('div');
+                notificationWindow.classList.add('notification-window');
+                notificationWindow.innerHTML = `
+                    <h2>Notificaciones de Productos con Stock Bajo</h2>
+                    <div id="notification-options">
+                        <label>Notificaciones:</label>
+                        <input type="checkbox" id="notification-switch" onchange="saveConfig()">
+                        <span>Activar notificaciones</span>
+                    </div>
+                    <ul>
+                        ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
+                    </ul>
+                    <button onclick="closeNotificationWindow()">Cerrar</button>
+                `;
+                document.body.appendChild(notificationWindow);
+            } else {
+                alert("No hay productos con stock bajo.");
+            }
+        }
+
+        // Función para cerrar la ventana emergente de notificaciones
+        function closeNotificationWindow() {
+            const notificationWindow = document.querySelector('.notification-window');
+            if (notificationWindow) {
+                notificationWindow.remove();
+            }
+        }
+
+        // Función para guardar la configuración de notificaciones (simulada)
+        function saveConfig() {
+            const notificationSwitch = document.getElementById('notification-switch');
+            // Aquí puedes guardar la configuración de notificaciones en Firebase o en tu base de datos
+            console.log('Configuración de notificaciones guardada:', notificationSwitch.checked);
+        }
+    </script>
+
 </body>
 </html>
