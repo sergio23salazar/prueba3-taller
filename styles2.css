@@ -119,6 +119,24 @@ body {
   background-color: #de423a; /* Color de fondo al pasar el mouse */
   color: #ffffff; /* Color del texto al pasar el mouse */
 }
+/* Estilo para la sección de opciones de notificaciones */
+#notification-options {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Estilo para el texto de "Activar notificaciones" */
+#notification-options span {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #689f38;
+}
+
+/* Estilo para el checkbox de notificaciones */
+#notification-switch {
+  margin-left: 10px;
+}
 
 /* Títulos */
 h1, h2 {
