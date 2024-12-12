@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <title>Contacto</title>
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, maximum-scale=2.0, minimum-scale=1.0">
+    <!-- Vínculos a hojas de estilo CSS -->
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="css/about.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/style2.css">
+    <!-- Vínculo a una fuente externa para iconos -->
     <link href="https://file.myfontastic.com/3j45yvRpaWhzeStdASehh9/icons.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Encabezado principal -->
     <header class="main-header">
         <div class="container container--flex">
+            <!-- Contenedor para el logo -->
             <div class="logo-container column column--50">
                 <h1 class="logo">Muebles Concepción a Medida</h1>
             </div>
+            <!-- Contenedor para la información de contacto -->
             <div class="main-header__contactInfo column column--50">
                 <p class="main-header__contactInfo__phone">
                     <span class="icon-phone">+56 9 9305 0536</span>
@@ -26,15 +31,20 @@
             </div>
         </div>
     </header>
+
+    <!-- Menú de navegación -->
     <nav class="main_nav">
         <div class="container container--flex">
+            <!-- Botón para abrir el menú en dispositivos móviles -->
             <span class="icon-menu" id="btnmenu"></span>
+            <!-- Lista de elementos del menú -->
             <ul class="menu" id="menu">
                 <li class="menu__item"><a href="../index.html" class="menu__link">Inicio</a></li>
                 <li class="menu__item"><a href="servicios.html" class="menu__link">Servicios</a></li>
                 <li class="menu__item"><a href="galeria.html" class="menu__link">Galería</a></li>
                 <li class="menu__item"><a href="contacto.html" class="menu__link menu__link--select">Contacto</a></li>
             </ul>
+            <!-- Íconos de redes sociales y botón de login -->
             <div class="social-icon">
                 <a href="#" class="social-icon__link"><span class="icon-facebook"></span></a>
                 <a href="#" class="social-icon__link"><span class="icon-twitter"></span></a>
@@ -43,20 +53,28 @@
             </div>
         </div>
     </nav>
+
+    <!-- Sección de banner con imagen de fondo -->
     <section class="banner">
         <img src="img/image4.jpg" alt="" class="banner__img">
         <div class="banner__content">¿Tienes dudas?</div>
     </section>
+
+    <!-- Contenido principal -->
     <main class="main">
         <section class="group--color">
             <div class="container">
+                <!-- Título principal de la sección -->
                 <h2 class="main__title">Contáctanos</h2>
+                <!-- Descripción de la sección -->
                 <p class="main_txt">
                     Si deseas obtener más información sobre nuestros muebles o solicitar un diseño personalizado, no dudes en contactarnos a través del siguiente formulario.
                 </p>
             </div>
         </section>
     </main>
+
+    <!-- Sección de formulario de contacto -->
     <section class="contact-form">
         <div class="container">
             <!-- Formulario de contacto -->
@@ -80,19 +98,23 @@
                 <button type="submit">Enviar</button>
             </form>
 
-            <!-- Mensaje de éxito -->
+            <!-- Mensaje de éxito que se muestra después de enviar el formulario -->
             <div id="successMessage" style="display: none; text-align: center; color: green; margin-top: 20px;">
                 <h3>Mensaje enviado con éxito</h3>
             </div>
 
+            <!-- Contenedor del mapa de ubicación -->
             <div class="map-container" style="text-align: center;">
                 <h3>Ubicación</h3>
                 <iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
             </div>
         </div>
     </section>
+
+    <!-- Pie de página -->
     <footer class="main-footer">
         <div class="container container--flex">
+            <!-- Información de contacto -->
             <div class="column column--33">
                 <h2 class="column__title">Visítanos</h2>
                 <p class="column__txt">Mall del Centro Concepción<br>Barros Arana 1068, Concepción</p>
@@ -102,11 +124,13 @@
                     Sábados: 10:00 - 14:00
                 </p>
             </div>
+            <!-- Información adicional de contacto -->
             <div class="column column--33">
                 <h2 class="column__title">Contáctanos</h2>
                 <p class="column__txt">Correo: info@mueblesconcepcion.cl</p>
                 <p class="column__txt">Teléfono: +56 9 9305 9305</p>
             </div>
+            <!-- Redes sociales -->
             <div class="column column--33">
                 <h2 class="column__title">Síguenos</h2>
                 <p class="column__txt">
@@ -120,8 +144,11 @@
                 </p>
             </div>
         </div>
+        <!-- Información de copyright -->
         <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
     </footer>
+
+    <!-- Scripts para el menú y el envío de formularios -->
     <script src="js/menu.js"></script>
 
     <!-- Script para manejar el envío del formulario con EmailJS -->
@@ -151,7 +178,7 @@
                 }, 2000);
             }, function(error) {
                 console.log('Error al enviar el mensaje', error);
-                alert('Hubo un problema al enviar el mensaje. Intenta nuevamente.');
+                alert('Hubo un problema al enviar el mensaje. Por favor intenta nuevamente.');
             });
         });
     </script>

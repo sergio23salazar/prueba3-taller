@@ -1,19 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Definición del conjunto de caracteres del documento (UTF-8) -->
     <meta charset="UTF-8">
+    
+    <!-- Título de la página que aparece en la pestaña del navegador -->
     <title>Servicios</title>
+    
+    <!-- Metaetiqueta que establece la compatibilidad con dispositivos móviles (viewport) -->
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, maximum-scale=2.0, minimum-scale=1.0">
+    
+    <!-- Vincula las hojas de estilo externas para dar formato a la página -->
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="css/about.css">
+    
+    <!-- Vincula un archivo de iconos -->
     <link href="https://file.myfontastic.com/3j45yvRpaWhzeStdASehh9/icons.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Cabecera principal de la página -->
     <header class="main-header">
         <div class="container container--flex">
+            <!-- Logo de la empresa -->
             <div class="logo-container column column--50">
                 <h1 class="logo">Muebles Concepción a Medida</h1>
             </div>
+            
+            <!-- Información de contacto: teléfono y dirección -->
             <div class="main-header__contactInfo column column--50">
                 <p class="main-header__contactInfo__phone">
                     <span class="icon-phone">+56 9 9305 0536</span>
@@ -24,28 +37,40 @@
             </div>
         </div>
     </header>
+    
+    <!-- Barra de navegación principal -->
     <nav class="main_nav">
         <div class="container container--flex">
+            <!-- Icono de menú para dispositivos móviles -->
             <span class="icon-menu" id="btnmenu"></span>
+            
+            <!-- Menú de navegación -->
             <ul class="menu" id="menu">
                 <li class="menu__item"><a href="../index.html" class="menu__link menu__link">Inicio</a></li>
                 <li class="menu__item"><a href="servicios.html" class="menu__link menu__link--select">Servicios</a></li>
                 <li class="menu__item"><a href="galeria.html" class="menu__link">Galería</a></li>
                 <li class="menu__item"><a href="contacto.html" class="menu__link">Contacto</a></li>
             </ul>
+            
+            <!-- Íconos sociales y botón de registro/login -->
             <div class="social-icon">
                 <a href="#" target="_blank" class="social-icon__link"><span class="icon-facebook"></span></a>
                 <a href="#" target="_blank" class="social-icon__link"><span class="icon-twitter"></span></a>
-                <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw== target="_blank" class="social-icon__link"><span class="icon-instagram"></span></a>
-                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>            </div>
+                <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="social-icon__link"><span class="icon-instagram"></span></a>
+                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>
             </div>
         </div>
     </nav>
+    
+    <!-- Sección de banner de la página -->
     <section class="banner">
         <img src="img/image3.jpg" alt="" class="banner__img"> 
         <div class="banner__content">Nuestro Talento, Tu Estilo</div>
     </section>
+    
+    <!-- Sección principal del contenido -->
     <main class="main">
+        <!-- Sección sobre la empresa -->
         <section class="group--color">
             <div class="container">
                 <h2 class="main__title">Sobre Nosotros</h2>
@@ -54,6 +79,8 @@
                 </p>
             </div>
         </section>
+        
+        <!-- Sección de presentación del equipo de trabajo -->
         <section class="group our-team">
             <h2 class="group__title">Conoce a Nuestro Equipo</h2>
             <div class="container container--flex">
@@ -75,6 +102,8 @@
             </div>
         </section>
     </main>
+    
+    <!-- Sección de pie de página con información de contacto -->
     <footer class="main-footer">
         <div class="container container--flex">
             <div class="column column--33">
@@ -106,6 +135,8 @@
             <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
         </div>
     </footer>
+    
+    <!-- Vinculación del archivo JavaScript para la funcionalidad del menú -->
     <script src="js/menu.js"></script>
 </body>
 </html>

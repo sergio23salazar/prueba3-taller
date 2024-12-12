@@ -1,52 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Definir la codificación de caracteres del documento como UTF-8 -->
     <meta charset="UTF-8">
+    <!-- Título de la página que aparecerá en la pestaña del navegador -->
     <title>Galería</title>
+    <!-- Configuración de la vista para hacer que la página sea responsiva en dispositivos móviles -->
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, maximum-scale=2.0, minimum-scale=1.0">
+    <!-- Vinculación de hojas de estilo CSS externas para el diseño de la página -->
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="css/about.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Enlace para los íconos personalizados -->
     <link href="https://file.myfontastic.com/3j45yvRpaWhzeStdASehh9/icons.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Encabezado principal de la página -->
     <header class="main-header">
         <div class="container container--flex">
+            <!-- Contenedor del logo -->
             <div class="logo-container column column--50">
                 <h1 class="logo">Muebles Concepción a Medida</h1>
             </div>
+            <!-- Información de contacto en el encabezado -->
             <div class="main-header__contactInfo column column--50">
                 <p class="main-header__contactInfo__phone">
+                    <!-- Icono y número de teléfono -->
                     <span class="icon-phone">+56 9 9305 0536</span>
                 </p>
                 <p class="main-header__contactInfo__addres">
+                    <!-- Icono y dirección -->
                     <span class="icon-location">Barros Arana 1068, Concepción</span>
                 </p>
             </div>
         </div>
     </header>
+    
+    <!-- Barra de navegación principal -->
     <nav class="main_nav">
         <div class="container container--flex">
+            <!-- Icono para abrir el menú -->
             <span class="icon-menu" id="btnmenu"></span>
+            <!-- Menú de navegación -->
             <ul class="menu" id="menu">
                 <li class="menu__item"><a href="../index.html" class="menu__link">Inicio</a></li>
                 <li class="menu__item"><a href="servicios.html" class="menu__link">Servicios</a></li>
                 <li class="menu__item"><a href="galeria.html" class="menu__link">Galería</a></li>
                 <li class="menu__item"><a href="contacto.html" class="menu__link">Contacto</a></li>
             </ul>
+            <!-- Enlaces a redes sociales -->
             <div class="social-icon">
                 <a href="#" target="_blank" class="social-icon__link"><span class="icon-facebook"></span></a>
                 <a href="#" target="_blank" class="social-icon__link"><span class="icon-twitter"></span></a>
                 <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="social-icon__link"><span class="icon-instagram"></span></a>
-                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>            </div>
-            </div>            
+                <!-- Botón para registrarse o iniciar sesión -->
+                <button class="btn-login" onclick="window.location.href='../login&registro.html'">Registrarse/Iniciar Sesión</button>            
+            </div>
         </div>
     </nav>
+    
+    <!-- Sección del banner con una imagen y el texto sobre los proyectos realizados -->
     <section class="banner">
         <img src="img/image2.jpg" alt="Banner de Muebles" class="banner__img">
         <div class="banner__content">Proyectos Realizados</div>
     </section>
     
+    <!-- Galería de imágenes de los muebles -->
     <div class="gallery">
         <img src="img/mueble1.jpg" alt="Mueble 1">
         <img src="img/mueble2.jpg" alt="Mueble 2">
@@ -61,10 +80,11 @@
         <img src="img/mueble11.jpg" alt="Mueble 11">
         <img src="img/mueble12.jpg" alt="Mueble 12">
     </div> 
-      
-    </main>
+    
+    <!-- Pie de página de la página -->
     <footer class="main-footer">
         <div class="container container--flex">
+            <!-- Sección de la dirección y horarios de atención -->
             <div class="column column--33">
                 <h2 class="column__title">Visítanos</h2>
                 <p class="column__txt">Mall del Centro Concepción<br>Barros Arana 1068, Concepción</p>
@@ -74,11 +94,13 @@
                     Sábados: 10:00 - 14:00
                 </p>
             </div>
+            <!-- Sección con información de contacto -->
             <div class="column column--33">
                 <h2 class="column__title">Contáctanos</h2>
                 <p class="column__txt">Correo: info@mueblesconcepcion.cl</p>
                 <p class="column__txt">Teléfono: +56 9 9305 0536</p>
             </div>
+            <!-- Sección de enlaces a redes sociales -->
             <div class="column column--33">
                 <h2 class="column__title">Síguenos</h2>
                 <p class="column__txt">
@@ -91,9 +113,12 @@
                     <a href="https://www.instagram.com/mueblesconcepcionamedida?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="icon-instagram" target="_blank">Instagram</a>
                 </p>
             </div>     
+            <!-- Texto de derechos de autor -->
             <p class="copy">@ 2024 Muebles Concepción a Medida | Todos los derechos reservados</p>
         </div>
     </footer>
+    
+    <!-- Script para controlar el menú (enlace a un archivo JavaScript externo) -->
     <script src="js/menu.js"></script>
 </body>
 </html>

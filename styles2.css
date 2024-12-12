@@ -23,88 +23,88 @@ body {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  background-color: #fdc62d;
-  cursor: pointer;
+  background-color: #fdc62d; /* Color de fondo amarillo */
+  cursor: pointer; /* Cambia el cursor a mano para indicar que es clickeable */
 }
 
 .img {
-  width: 20px;
-  height: 20px;
+  width: 20px; /* Establece el tamaño de la imagen */
+  height: 20px; /* Establece el tamaño de la imagen */
 }
 
+/* Estilo para la ventana emergente de notificaciones */
 .notification-window {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #333;
-  border: 1px solid #fdc62d;
-  padding: 20px;
-  width: 300px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  color: #fff; /* Establece el color del texto */
+  top: 50%; /* Posiciona la ventana en el centro de la pantalla */
+  left: 50%; /* Posiciona la ventana en el centro de la pantalla */
+  transform: translate(-50%, -50%); /* Ajusta la ventana para que quede centrada */
+  background-color: #333; /* Color de fondo gris oscuro */
+  border: 1px solid #fdc62d; /* Borde amarillo */
+  padding: 20px; /* Espaciado interno */
+  width: 300px; /* Ancho de la ventana */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Sombra ligera para dar profundidad */
+  color: #fff; /* Color de texto blanco */
 }
 
 .notification-window h2 {
-  margin-top: 0;
+  margin-top: 0; /* Elimina el margen superior */
 }
 
 .notification-window ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  list-style: none; /* Elimina los puntos de lista */
+  padding: 0; /* Elimina el relleno */
+  margin: 0; /* Elimina el margen */
 }
 
 .notification-window li {
-  margin-bottom: 10px;
-  color: #000000;
-
+  margin-bottom: 10px; /* Agrega espacio entre los elementos de la lista */
+  color: #000000; /* Color de texto negro para los elementos de la lista */
 }
 
 .notification-window button {
-  background-color: #fdc62d;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  background-color: #fdc62d; /* Color de fondo amarillo */
+  color: #fff; /* Color de texto blanco */
+  padding: 10px 20px; /* Relleno */
+  border: none; /* Sin borde */
+  border-radius: 5px; /* Bordes redondeados */
+  cursor: pointer; /* Cambia el cursor a mano */
 }
 
 .notification-window button:hover {
-  background-color: #d93b2a;
+  background-color: #d93b2a; /* Color de fondo rojo cuando se pasa el cursor */
 }
 
-.btn-login { /*Panel de Empleado*/
+/* Botón de login para empleados */
+.btn-login { 
   display: inline-block; /* Para que se comporte como un botón */
   text-align: center; /* Centra el texto */
   text-decoration: none; /* Sin subrayado */
-  background-color: #fdc62d; /* Color de fondo */
-  color: #ffffff; /* Color del texto */
-  padding: 10px 20px; /* Espaciado interno */
+  background-color: #fdc62d; /* Color de fondo amarillo */
+  color: #ffffff; /* Color de texto blanco */
+  padding: 10px 20px; /* Relleno */
   border: none; /* Sin borde */
   border-radius: 5px; /* Bordes redondeados */
   font-size: 1em; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor al pasar el mouse */
+  cursor: pointer; /* Cambia el cursor a mano */
   transition: background-color 0.3s; /* Transición suave para el color de fondo */
   margin-left: 10px; /* Espacio a la izquierda del botón */
   margin-right: 10px; /* Espacio a la derecha del botón */
   width: 150%; /* Ancho completo de cerrar sesión (cliente y empleado)*/
   margin-bottom: 1px; /* Agrega margen inferior */
-
-
 }
 
-.btn-login2 { /*Panel de Cliente*/
+/* Botón de login para clientes */
+.btn-login2 { 
   display: inline-block; /* Para que se comporte como un botón */
   text-align: center; /* Centra el texto */
   text-decoration: none; /* Sin subrayado */
-  background-color: #fdc62d; /* Color de fondo */
-  color: #ffffff; /* Color del texto */
-  padding: 10px 20px; /* Espaciado interno */
+  background-color: #fdc62d; /* Color de fondo amarillo */
+  color: #ffffff; /* Color de texto blanco */
+  padding: 10px 20px; /* Relleno */
   border: none; /* Sin borde */
   border-radius: 5px; /* Bordes redondeados */
   font-size: 1em; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor al pasar el mouse */
+  cursor: pointer; /* Cambia el cursor a mano */
   transition: background-color 0.3s; /* Transición suave para el color de fondo */
   margin-left: 10px; /* Espacio a la izquierda del botón */
   margin-right: 10px; /* Espacio a la derecha del botón */
@@ -112,177 +112,136 @@ body {
   margin-bottom: -4px; /* Agrega margen inferior */
 }
 
-.btn-login:hover {
-  background-color: #de423a; /* Color de fondo al pasar el mouse */
-  color: #ffffff; /* Color del texto al pasar el mouse */
+/* Estilos de hover para los botones */
+.btn-login:hover, .btn-login2:hover {
+  background-color: #de423a; /* Color de fondo rojo al pasar el cursor */
+  color: #ffffff; /* Color del texto blanco al pasar el cursor */
 }
 
-.btn-login2:hover {
-  background-color: #de423a; /* Color de fondo al pasar el mouse */
-  color: #ffffff; /* Color del texto al pasar el mouse */
-}
 /* Estilo para la sección de opciones de notificaciones */
 #notification-options {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-  color: #000000;
+  display: flex; /* Usa flexbox para organizar los elementos */
+  align-items: center; /* Centra los elementos verticalmente */
+  margin-bottom: 10px; /* Agrega margen inferior */
+  color: #000000; /* Establece el color de texto negro */
 }
 
 /* Estilo para el checkbox de notificaciones */
 #notification-switch {
-  margin-left: 10px;
-  align-items: center;
+  margin-left: 10px; /* Espacio a la izquierda */
+  align-items: center; /* Alinea los elementos verticalmente */
 }
 
-/* Títulos */
+/* Estilos para los títulos */
 h1, h2 {
-  color: #fdc62d; /* Establece el color para los títulos */
+  color: #fdc62d; /* Color dorado para los títulos */
   text-align: center; /* Centra los títulos */
-  margin: 20px 0; /* Establece márgenes verticales */
+  margin: 20px 0; /* Márgenes superiores e inferiores */
 }
 
-/* Formulario */
+/* Estilos para el formulario */
 form {
-  background-color: #333; /* Establece un fondo oscuro para el formulario */
-  border: 1px solid #333; /* Establece un borde gris oscuro */
-  border-radius: 8px; /* Redondea las esquinas del formulario */
-  padding: 20px; /* Establece relleno dentro del formulario */
-  width: 100%; /* Hace que el formulario ocupe todo el ancho disponible */
-  max-width: 400px; /* Establece un máximo de 400px de ancho */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); /* Agrega sombra para dar profundidad */
+  background-color: #333; /* Fondo gris oscuro */
+  border: 1px solid #333; /* Borde gris oscuro */
+  border-radius: 8px; /* Bordes redondeados */
+  padding: 20px; /* Espaciado interno */
+  width: 100%; /* Ancho completo */
+  max-width: 400px; /* Ancho máximo de 400px */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
 }
 
 /* Estilos para inputs y botones en formulario */
 form input, form textarea {
-  width: 100%; /* Hace que los campos de entrada ocupen todo el ancho disponible */
-  padding: 10px; /* Agrega relleno a los campos de entrada */
+  width: 100%; /* Hace que los campos ocupen todo el ancho disponible */
+  padding: 10px; /* Agrega relleno */
   margin-bottom: 15px; /* Agrega margen debajo de cada campo */
-  border: none; /* Elimina el borde predeterminado de los campos */
+  border: none; /* Elimina el borde predeterminado */
   border-radius: 4px; /* Redondea las esquinas de los campos */
-  background-color: #444; /* Establece un fondo oscuro para los campos */
-  color: #e0e0e0; /* Establece el color del texto */
-  font-size: 1rem; /* Establece el tamaño de fuente */
+  background-color: #444; /* Fondo oscuro para los campos */
+  color: #e0e0e0; /* Color de texto gris claro */
+  font-size: 1rem; /* Tamaño de fuente */
 }
 
-/* Botón de guardar */
+/* Estilos para el botón de guardar */
 form button {
   width: 100%; /* Hace que el botón ocupe todo el ancho disponible */
-  padding: 10px; /* Agrega relleno al botón */
-  background-color: #fdc62d; /* Establece el color de fondo del botón */
-  border: none; /* Elimina el borde del botón */
-  border-radius: 4px; /* Redondea las esquinas del botón */
-  color: white; /* Establece el color del texto del botón */
-  font-size: 1rem; /* Establece el tamaño de la fuente */
-  cursor: pointer; /* Cambia el cursor a puntero para indicar interactividad */
-  transition: background-color 0.3s ease, transform 0.2s; /* Agrega transición para color de fondo y escalado */
+  padding: 10px; /* Relleno */
+  background-color: #fdc62d; /* Fondo amarillo */
+  border: none; /* Elimina el borde */
+  border-radius: 4px; /* Bordes redondeados */
+  color: white; /* Color de texto blanco */
+  font-size: 1rem; /* Tamaño de fuente */
+  cursor: pointer; /* Cambia el cursor a mano */
+  transition: background-color 0.3s ease, transform 0.2s; /* Transición suave para el fondo y el escalado */
 }
 
+/* Estilos para el hover del botón */
 form button:hover {
-  background-color: #f44336; /* Cambia el color del fondo del botón al pasar el mouse */
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón al pasar el mouse */
+  background-color: #f44336; /* Color de fondo rojo */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón */
 }
 
-/* Lista de productos */
+/* Estilos para la lista de productos */
 ul#product-list {
   list-style-type: none; /* Elimina los puntos de lista */
-  padding: 0; /* Elimina el relleno predeterminado */
+  padding: 0; /* Elimina el relleno */
   width: 100%; /* Hace que la lista ocupe todo el ancho disponible */
-  max-width: 600px; /* Establece un máximo de 600px de ancho para la lista */
+  max-width: 600px; /* Ancho máximo de 600px */
 }
 
 ul#product-list li {
-  background-color: #333; /* Establece un fondo oscuro para cada elemento de la lista */
-  margin-bottom: 10px; /* Agrega margen inferior entre los elementos de la lista */
-  padding: 15px; /* Agrega relleno a cada elemento de la lista */
-  border-radius: 8px; /* Redondea las esquinas de los elementos */
-  border: 1px solid #333; /* Establece un borde gris oscuro para los elementos */
+  background-color: #333; /* Fondo gris oscuro */
+  margin-bottom: 10px; /* Espacio entre los elementos */
+  padding: 15px; /* Relleno */
+  border-radius: 8px; /* Bordes redondeados */
+  border: 1px solid #333; /* Borde gris oscuro */
 }
 
 ul#product-list li .product-info {
-  margin-bottom: 10px; /* Agrega margen debajo de la información del producto */
+  margin-bottom: 10px; /* Espacio debajo de la información del producto */
 }
 
 ul#product-list li .button-container {
-  display: flex; /* Usa flexbox para alinear los botones dentro del elemento */
-  justify-content: space-between; /* Espacia los botones entre sí */
+  display: flex; /* Usa flexbox para alinear los botones */
+  justify-content: space-between; /* Espacio entre los botones */
 }
 
+/* Estilos para los botones dentro de la lista de productos */
 ul#product-list li button {
-  padding: 10px; /* Agrega relleno a los botones */
-  border-radius: 4px; /* Redondea las esquinas de los botones */
-  color: rgb(255, 255, 255); /* Establece el color del texto de los botones */
-  font-size: 1rem; /* Establece el tamaño de la fuente de los botones */
-  cursor: pointer; /* Cambia el cursor a puntero para indicar interactividad */
-  transition: background-color 0.3s ease, transform 0.2s; /* Agrega transición para color de fondo y escalado */
+  padding: 10px; /* Relleno */
+  border-radius: 4px; /* Bordes redondeados */
+  color: rgb(255, 255, 255); /* Color blanco para el texto */
+  font-size: 1rem; /* Tamaño de fuente */
+  cursor: pointer; /* Cambia el cursor a mano */
+  transition: background-color 0.3s ease, transform 0.2s; /* Transición suave */
 }
 
 ul#product-list li button:nth-child(1) {
-  background-color: #fdc62d; /* Establece el color de fondo para el primer botón */
+  background-color: #fdc62d; /* Fondo amarillo */
 }
 
 ul#product-list li button:nth-child(2) {
-  background-color: #fdc62d; /* Establece el color de fondo para el segundo botón */
+  background-color: #fdc62d; /* Fondo amarillo */
 }
 
 ul#product-list li button:hover {
-  background-color: #f44336; /* Cambia el color de fondo de los botones al pasar el mouse */
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño de los botones al pasar el mouse */
+  background-color: #f44336; /* Fondo rojo al pasar el cursor */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño */
 }
 
-/* Nuevo estilo para la selección de descuento y promoción */
-.form-radio {
-  display: flex; /* Usa flexbox para organizar los elementos de radio */
-  justify-content: space-between; /* Espacia los botones de radio */
-  margin-bottom: 15px; /* Agrega margen inferior */
-}
-
-.form-radio label {
-  margin-right: 10px; /* Agrega margen a la derecha de las etiquetas */
-  color: #ffd600; /* Establece el color dorado para las etiquetas */
-}
-
-form .radio-group {
-  display: flex; /* Usa flexbox para organizar los botones de radio */
-  justify-content: space-between; /* Espacia los botones de radio */
-  gap: 10px; /* Agrega espacio entre los botones de radio */
-}
-
-form .radio-group input[type="radio"] {
-  margin-right: 5px; /* Agrega margen a la derecha de los botones de radio */
-}
-
-#discount-form, #promotion-form {
-  margin-top: 15px; /* Agrega margen superior */
-  display: none; /* Se ocultan inicialmente los formularios de descuento y promoción */
-}
-
-#discount-form input[type="number"], #promotion-form input[type="text"] {
-  max-width: 150px; /* Establece un máximo de 150px para el ancho de los campos numéricos */
-}
-
-#discount-form, #promotion-form textarea {
-  max-width: 300px; /* Establece un máximo de 300px para el ancho de los textos */
-}
-
-/* Visibilidad de los formularios */
-.show-discount, .show-promotion {
-  display: block !important; /* Hace visibles los formularios de descuento y promoción */
-}
-
-/* Estilo para botones de descuento y promoción */
+/* Estilo para los botones de descuento y promoción */
 button.discount-button {
-  background-color: #8bc34a; /* Establece el color de fondo del botón de descuento */
+  background-color: #8bc34a; /* Fondo verde para descuento */
 }
 
 button.promotion-button {
-  background-color: #ff5722; /* Establece el color de fondo del botón de promoción */
+  background-color: #ff5722; /* Fondo naranja para promoción */
 }
 
 button.discount-button:hover {
-  background-color: #689f38; /* Cambia el color del fondo del botón de descuento al pasar el mouse */
+  background-color: #689f38; /* Fondo verde más oscuro al pasar el cursor */
 }
 
 button.promotion-button:hover {
-  background-color: #f44336; /* Cambia el color del fondo del botón de promoción al pasar el mouse */
+  background-color: #f44336; /* Fondo rojo al pasar el cursor */
 }
