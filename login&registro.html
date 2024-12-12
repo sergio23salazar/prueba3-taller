@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css"> <!-- Enlace al archivo de estilos CSS -->
   <title>Login y Registro</title>
   <script type="module">
+    // Importación de las bibliotecas de Firebase necesarias
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
+    // Configuración de Firebase (nunca exponer datos sensibles como estas claves en producción)
     const firebaseConfig = {
       apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
       authDomain: "crud-18998.firebaseapp.com",
@@ -19,26 +21,30 @@
       appId: "1:1046471634199:web:37309d7fd8825896755b52"
     };
 
+    // Inicializar la aplicación Firebase
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
+    const auth = getAuth(app);  // Autenticación
+    const database = getDatabase(app);  // Base de datos
 
+    // Función para limpiar los campos de un formulario después de un registro o inicio de sesión
     function clearInputs(formId) {
       const form = document.getElementById(formId);
       form.reset();
     }
 
+    // Función para registrar un nuevo usuario
     function registerUser(email, password, userType) {
+      // Crear usuario con email y contraseña
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          const userId = user.uid;
-          const userRef = ref(database, `${userType}/${userId}`);
-          set(userRef, { email })
+          const userId = user.uid;  // Obtener el ID único del usuario
+          const userRef = ref(database, `${userType}/${userId}`);  // Referencia en la base de datos según el tipo de usuario
+          set(userRef, { email })  // Guardar el email en la base de datos
             .then(() => {
-              alert('Usuario registrado correctamente');
-              clearInputs('registerForm');
-              toggleLogin();
+              alert('Usuario registrado correctamente');  // Mostrar mensaje de éxito
+              clearInputs('registerForm');  // Limpiar los campos del formulario de registro
+              toggleLogin();  // Mostrar la sección de login
             })
             .catch((error) => {
               console.error('Error al registrar el usuario:', error);
@@ -49,89 +55,97 @@
         });
     }
 
+    // Función para iniciar sesión con email y contraseña
     function loginUser(email, password) {
+      // Iniciar sesión con email y contraseña
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           const userId = user.uid;
-          const categories = ['admins', 'clientes', 'empleados'];
-          let userCategory = null;
+          const categories = ['admins', 'clientes', 'empleados'];  // Categorías de usuario
+          let userCategory = null;  // Variable para almacenar la categoría del usuario
           let checkCategoryPromises = categories.map((category) => {
-            const userRef = ref(database, `${category}/${userId}`);
+            const userRef = ref(database, `${category}/${userId}`);  // Referencia para cada categoría
             return get(userRef).then((snapshot) => {
               if (snapshot.exists()) {
-                userCategory = category;
+                userCategory = category;  // Si el usuario existe en una categoría, asignar la categoría
+                // Redirigir según el tipo de usuario
                 if (userCategory === "admins") {
-                  window.location.href = "admin.html";
+                  window.location.href = "admin.html";  // Redirigir a la página del administrador
                 } else if (userCategory === "empleados") {
-                  window.location.href = "empleado_dashboard.html";
+                  window.location.href = "empleado_dashboard.html";  // Redirigir al panel de empleados
                 } else if (userCategory === "clientes") {
-                  window.location.href = "cliente_dashboard.html";
+                  window.location.href = "cliente_dashboard.html";  // Redirigir al panel de clientes
                 }
               }
             });
           });
 
+          // Esperar a que todas las categorías se verifiquen
           Promise.all(checkCategoryPromises).then(() => {
             if (!userCategory) {
-              alert("Usuario no registrado en ninguna categoría");
+              alert("Usuario no registrado en ninguna categoría");  // Mensaje si el usuario no está registrado en ninguna categoría
             }
           });
 
-          alert('Inicio de sesión exitoso');
-          clearInputs('loginForm');
+          alert('Inicio de sesión exitoso');  // Mensaje de éxito al iniciar sesión
+          clearInputs('loginForm');  // Limpiar los campos del formulario de login
         })
         .catch((error) => {
-          console.error('Error al iniciar sesión:', error);
+          console.error('Error al iniciar sesión:', error);  // Manejo de errores al iniciar sesión
         });
     }
 
+    // Función para mostrar la sección de registro y ocultar la de login
     function toggleRegister() {
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('registerSection').style.display = 'block';
+      document.getElementById('loginSection').style.display = 'none';  // Ocultar la sección de login
+      document.getElementById('registerSection').style.display = 'block';  // Mostrar la sección de registro
     }
 
+    // Función para mostrar la sección de login y ocultar la de registro
     function toggleLogin() {
-      document.getElementById('registerSection').style.display = 'none';
-      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('registerSection').style.display = 'none';  // Ocultar la sección de registro
+      document.getElementById('loginSection').style.display = 'block';  // Mostrar la sección de login
     }
 
+    // Event listeners para cambiar entre las secciones de login y registro
     window.addEventListener('load', () => {
       document.getElementById('registerLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleRegister();
+        e.preventDefault();  // Prevenir el comportamiento por defecto del enlace
+        toggleRegister();  // Cambiar a la sección de registro
       });
 
       document.getElementById('loginLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleLogin();
+        e.preventDefault();  // Prevenir el comportamiento por defecto del enlace
+        toggleLogin();  // Cambiar a la sección de login
       });
     });
 
+    // Manejadores de eventos para los formularios de login y registro
     document.getElementById('loginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
+      e.preventDefault();  // Prevenir el comportamiento por defecto del formulario
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
-      loginUser(email, password);
+      loginUser(email, password);  // Llamar a la función de login con los valores del formulario
     });
 
     document.getElementById('registerForm').addEventListener('submit', (e) => {
-      e.preventDefault();
+      e.preventDefault();  // Prevenir el comportamiento por defecto del formulario
       const email = document.getElementById('registerEmail').value;
       const password = document.getElementById('registerPassword').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
       const userType = document.getElementById('registerUserType').value;
 
-      if (password === confirmPassword) {
-        registerUser(email, password, userType);
+      if (password === confirmPassword) {  // Verificar que las contraseñas coinciden
+        registerUser(email, password, userType);  // Llamar a la función de registro
       } else {
-        alert('Las contraseñas no coinciden');
+        alert('Las contraseñas no coinciden');  // Mostrar alerta si las contraseñas no coinciden
       }
     });
   </script>
 </head>
 <body>
-  <!-- Botón de Volver a Inicio -->
+  <!-- Botón para volver a la página de inicio -->
   <button style="margin-bottom: 20px;" onclick="window.location.href='../index.html'">Volver a Inicio</button>
 
   <!-- Sección de Login -->

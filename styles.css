@@ -9,84 +9,84 @@
 /* Estilos generales para el cuerpo de la página */
 body {
     font-family: 'Arial', sans-serif; /* Define la fuente principal */
-    background-color: rgb(0, 0, 0); /* Fondo */
+    background-color: rgb(0, 0, 0); /* Establece el fondo en negro */
     margin: 0; /* Elimina el margen predeterminado */
-    color: white; /* Texto */
+    color: white; /* Establece el color del texto en blanco */
 }
 
-/* Elimina el margen de los títulos */
+/* Elimina el margen de los títulos h1, h2, h3, h4, h5 */
 h1, h2, h3, h4, h5 {
-    margin: 0; /* Elimina el margen */
+    margin: 0; /* Elimina el margen por defecto */
 }
 
 /* Contenedor con 100% de ancho y centrado */
 .container {
-    width: 100%; /* Ancho completo */
-    margin: auto; /* Centrado automático */
+    width: 100%; /* Hace que el contenedor ocupe todo el ancho disponible */
+    margin: auto; /* Centra el contenedor horizontalmente */
 }
 
 /* Contenedor con diseño en flex para centrar los elementos */
 .container--flex {
-    display: flex; /* Usa flexbox */
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center; /* Centra verticalmente */
-    color: #fff; /* Texto */
+    display: flex; /* Utiliza Flexbox para el diseño */
+    justify-content: center; /* Centra los elementos horizontalmente */
+    align-items: center; /* Centra los elementos verticalmente */
+    color: #fff; /* Establece el color del texto a blanco */
 }
 
 /* Estilo para el título fuera del formulario, centrado */
 .title {
     text-align: center; /* Centra el texto */
-    font-family: 'Sacramento', cursive; /* Fuente cursiva de Sacramento */
-    font-size: 40px; /* Tamaño de fuente grande */
-    color: #fdc62d; /* Color */
-    margin-bottom: 20px; /* Espacio inferior */
+    font-family: 'Sacramento', cursive; /* Fuente cursiva 'Sacramento' */
+    font-size: 40px; /* Tamaño grande de fuente */
+    color: #fdc62d; /* Color dorado para el título */
+    margin-bottom: 20px; /* Añade espacio debajo del título */
 }
 
 /* Estilo del formulario */
 form {
-    background-color: #333; /* Fondo */
-    padding: 20px; /* Espaciado interno */
+    background-color: #333; /* Fondo gris oscuro */
+    padding: 20px; /* Añade espacio interno en el formulario */
     border-radius: 8px; /* Bordes redondeados */
-    width: 300px; /* Ancho fijo */
-    margin: auto; /* Centrado del formulario */
+    width: 300px; /* Establece un ancho fijo */
+    margin: auto; /* Centra el formulario en la página */
 }
 
 /* Estilo para los inputs y selects */
 input, select {
-    width: 100%; /* Ancho completo */
+    width: 100%; /* Ancho completo de los elementos */
     padding: 10px; /* Relleno interno */
-    margin: 10px 0; /* Márgenes arriba y abajo */
-    border: none; /* Sin bordes */
+    margin: 10px 0; /* Márgenes superior e inferior */
+    border: none; /* Elimina el borde por defecto */
     border-radius: 4px; /* Bordes redondeados */
-    background-color: #444; /* Fondo */
-    color: #fff; /* Texto */
+    background-color: #444; /* Fondo gris para los campos */
+    color: #fff; /* Establece el color del texto a blanco */
 }
 
 /* Estilo para los botones */
 button {
-    width: 100%; /* Ancho completo */
+    width: 100%; /* Ancho completo del botón */
     padding: 10px; /* Relleno interno */
-    background-color: #de423a; /* Fondo */
-    color: #fff; /* Texto */
-    border: none; /* Sin bordes */
+    background-color: #de423a; /* Fondo rojo */
+    color: #fff; /* Establece el color del texto a blanco */
+    border: none; /* Elimina el borde del botón */
     border-radius: 4px; /* Bordes redondeados */
-    cursor: pointer; /* Cambia el cursor a mano al pasar por encima */
+    cursor: pointer; /* Cambia el cursor a mano al pasar sobre el botón */
 }
 
 /* Estilo para el hover en los botones */
 button:hover {
-    background-color: #d93b2a; /* Cambia el color a un tono más oscuro de rojo */
+    background-color: #d93b2a; /* Cambia el color a un tono más oscuro de rojo al pasar el cursor */
 }
 
 /* Estilo para los párrafos con texto centrado */
 p {
-    text-align: center; /* Centra el texto */
+    text-align: center; /* Centra el texto de los párrafos */
 }
 
 /* Estilo para los enlaces */
 a {
-    color: #fdc62d; /* Color */
-    text-decoration: none; /* Sin subrayado */
+    color: #fdc62d; /* Color dorado para los enlaces */
+    text-decoration: none; /* Elimina el subrayado de los enlaces */
 }
 
 /* Estilo para el hover en los enlaces */
