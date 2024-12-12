@@ -126,6 +126,11 @@ function showLowStockNotifications() {
       const notificationWindow = document.createElement('div');
       notificationWindow.innerHTML = `
         <h2>Notificaciones de Productos con Stock Bajo</h2>
+        <div id="notification-options">
+          <label>Notificaciones:</label>
+          <input type="checkbox" id="notification-switch" onchange="saveConfig()">
+          <span>Activar notificaciones</span>
+        </div>
         <ul>
           ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
         </ul>
@@ -138,6 +143,20 @@ function showLowStockNotifications() {
     console.error('Error al cargar los productos:', error);
   });
 }
+
+// Función para guardar la configuración de las notificaciones
+function saveConfig() {
+  const dbRef = ref(database, 'configuracion/');
+  const notificationSwitch = document.getElementById('notification-switch');
+  set(dbRef, {
+    notificaciones: notificationSwitch.checked
+  }).then(() => {
+    console.log('Configuración guardada con éxito');
+  }).catch((error) => {
+    console.error('Error al guardar la configuración:', error);
+  });
+}
+
 window.showLowStockNotifications = showLowStockNotifications;
 window.closeNotificationWindow = closeNotificationWindow;
 // Función para cerrar la ventana emergente de notificaciones
