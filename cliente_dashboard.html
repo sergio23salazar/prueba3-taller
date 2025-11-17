@@ -1,218 +1,249 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
+<html lang="es"> 
+<head> 
+  <meta charset="UTF-8"> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles2.css">
   <title>Panel de Cliente</title>
 
-  <!-- Script de Firebase para interactuar con la base de datos en tiempo real -->
   <script type="module">
     // Importamos las librerías necesarias de Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // Configuración de Firebase (debe ser proporcionada por la consola de Firebase)
+    // NUEVA CONFIGURACIÓN FIREBASE (mismo proyecto que login/admin/empleado)
     const firebaseConfig = {
-      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
-      authDomain: "crud-18998.firebaseapp.com",
-      projectId: "crud-18998",
-      storageBucket: "crud-18998.firebasestorage.app",
-      messagingSenderId: "1046471634199",
-      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+      apiKey: "AIzaSyAthW2iuNy8SGUOVCzhjqEuDOIjWoDpi_A",
+      authDomain: "crud-7fb63.firebaseapp.com",
+      databaseURL: "https://crud-7fb63-default-rtdb.firebaseio.com",
+      projectId: "crud-7fb63",
+      storageBucket: "crud-7fb63.firebasestorage.app",
+      messagingSenderId: "449296123494",
+      appId: "1:449296123494:web:ad23ebf3e3b695ee62cfa7"
     };
 
-    // Inicializamos la aplicación Firebase con la configuración proporcionada
+    // Inicializamos Firebase
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app); // Obtenemos la referencia a la base de datos
+    const database = getDatabase(app);
+    const auth = getAuth(app);
 
-    // Función que se ejecuta cuando se hace clic en el botón "Consultar Compra"
-    function checkPurchase() {
-      // Obtenemos el código de compra ingresado por el usuario
-      const purchaseCode = document.getElementById('purchase-code').value.trim();
-
-      // Si el código de compra está vacío, mostramos un mensaje de alerta
-      if (!purchaseCode) {
-        alert('Por favor ingrese un código de compra.');
+    // --------- PROTECCIÓN DE RUTA: SOLO CLIENTES (Y/O ADMINS) ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "../login&registro.html";
         return;
       }
 
-      // Referencia a la ubicación de la compra en la base de datos usando el código de compra
-      const dbRef = ref(database, 'compras/' + purchaseCode);
-      
-      // Realizamos una consulta a la base de datos para obtener los datos de la compra
-      get(dbRef).then((snapshot) => {
-        // Si la compra existe, mostramos los detalles, de lo contrario, mostramos un mensaje de error
-        if (snapshot.exists()) {
-          const purchaseData = snapshot.val();
-          displayPurchaseDetails(purchaseData);  // Llamamos a la función para mostrar los detalles
-        } else {
-          alert('Código de compra no encontrado.');  // Si no existe, mostramos un mensaje de error
+      try {
+        const clienteSnap = await get(ref(database, `clientes/${user.uid}`));
+        const adminSnap   = await get(ref(database, `admins/${user.uid}`));
+
+        if (!clienteSnap.exists() && !adminSnap.exists()) {
+          alert("No tienes permisos para acceder al panel de cliente.");
+          window.location.href = "../login&registro.html";
         }
-      }).catch((error) => {
-        console.error('Error al consultar la compra:', error);  // Si ocurre un error, lo mostramos en consola
-      });
+      } catch (error) {
+        console.error("Error verificando rol de cliente:", error);
+      }
+    });
+
+    // --------- CONSULTAR COMPRA POR CÓDIGO ----------
+    function checkPurchase() {
+      const purchaseCodeInput = document.getElementById("purchase-code");
+      const purchaseCode = purchaseCodeInput.value.trim();
+
+      if (!purchaseCode) {
+        alert("Por favor ingrese un código de compra.");
+        return;
+      }
+
+      const dbRef = ref(database, "compras/" + purchaseCode);
+      get(dbRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            const purchaseData = snapshot.val();
+            displayPurchaseDetails(purchaseData);
+          } else {
+            alert("Código de compra no encontrado.");
+            document.getElementById("purchase-details").innerHTML = "";
+          }
+        })
+        .catch((error) => {
+          console.error("Error al consultar la compra:", error);
+        });
     }
 
-    // Función para mostrar los detalles de la compra
+    // --------- MOSTRAR DETALLES DE LA COMPRA ----------
     function displayPurchaseDetails(purchaseData) {
-      // Contenedor donde se mostrarán los detalles de la compra
-      const detailsContainer = document.getElementById('purchase-details');
+      const detailsContainer = document.getElementById("purchase-details");
 
-      // Formateamos la fecha para mostrarla en un formato amigable
       const formattedDate = new Date(purchaseData.date).toLocaleString();
-
-      // Calculamos el total sin decimales (usamos Math.floor para redondear hacia abajo)
       const totalWithoutDecimals = Math.floor(purchaseData.total);
 
-      // Construimos el HTML con los detalles de la compra
       detailsContainer.innerHTML = `
         <div class="purchase-header">
           <h3>Detalles de la Compra</h3>
           <p><strong>Código de Compra:</strong> ${purchaseData.code}</p>
           <p><strong>Fecha:</strong> ${formattedDate}</p>
-          <p><strong>Total de la Compra:</strong> <span class="total-price">$${totalWithoutDecimals}</span></p>
+          <p><strong>Total de la Compra:</strong> 
+            <span class="total-price">$${totalWithoutDecimals}</span>
+          </p>
         </div>
         
         <h4>Productos Comprados:</h4>
         <ul class="purchase-items">
-          ${purchaseData.items.map(item => `
+          ${purchaseData.items
+            .map(
+              (item) => `
             <li class="purchase-item">
               <span><strong>Producto:</strong> ${item.name}</span>
               <span><strong>Cantidad:</strong> ${item.quantity}</span>
-              <span><strong>Total:</strong> $${Math.floor(item.price * item.quantity)}</span>
+              <span><strong>Total:</strong> $${Math.floor(
+                item.price * item.quantity
+              )}</span>
             </li>
-          `).join('')}
+          `
+            )
+            .join("")}
         </ul>
       `;
     }
 
-    // Hacemos que la función checkPurchase esté disponible en el contexto global
+    // --------- LOGOUT ----------
+    function logout() {
+      signOut(auth)
+        .then(() => {
+          window.location.href = "../login&registro.html";
+        })
+        .catch((err) => {
+          console.error("Error al cerrar sesión:", err);
+          window.location.href = "../login&registro.html";
+        });
+    }
+
+    // Hacemos funciones disponibles en el contexto global
     window.checkPurchase = checkPurchase;
+    window.logout = logout;
   </script>
 
-  <!-- Estilos CSS directamente en el archivo HTML -->
+  <!-- Estilos específicos del panel de cliente (complementan styles2.css) -->
   <style>
-    /* Estilos generales para la página */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #000;  /* Fondo de la página en color negro */
-      color: #fff;  /* Texto blanco */
+    .client-container {
+      width: 100%;
+      max-width: 700px;
+      margin-top: 10px;
     }
 
     h1 {
-      text-align: center;  /* Centra el título */
-      margin-bottom: 20px;  /* Espacio debajo del título */
+      text-align: center;
+      margin-bottom: 10px;
     }
 
-    button {
-      padding: 10px 15px;
-      background-color: #4CAF50;  /* Color verde para los botones */
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin: 5px;
-      font-size: 16px;
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
     }
 
-    button:hover {
-      background-color: #45a049;  /* Color verde más oscuro al pasar el ratón por encima */
-    }
-
-    /* Estilo del botón de login */
-    .btn-login {
-      background-color: #fdc62d; /* Color de fondo */
-      color: white;
-      font-size: 14px;
-    }
-
-    /* Estilo del formulario de consulta */
-    input[type="text"] {
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* Centrado de los elementos dentro del contenedor del formulario */
     .form-container {
       text-align: center;
+      margin-top: 10px;
+      margin-bottom: 20px;
     }
 
-    /* Estilo de la cabecera de los detalles de la compra */
-    .purchase-header {
-      background-color: #4CAF50;  /* Fondo verde para la cabecera */
-      color: white;
-      padding: 20px;
+    .form-container input[type="text"] {
+      padding: 10px;
+      width: 280px;
+      font-size: 16px;
       border-radius: 5px;
-      margin-bottom: 20px;
+      border: 1px solid #555;
+      margin-bottom: 10px;
+      background-color: #222;
+      color: #e0e0e0;
+    }
+
+    .form-container button {
+      padding: 10px 18px;
+      background-color: #fdc62d;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background-color 0.3s ease, transform 0.2s;
+    }
+
+    .form-container button:hover {
+      background-color: #f44336;
+      transform: scale(1.03);
+    }
+
+    .purchase-header {
+      background-color: #333;
+      color: #ffffff;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
       text-align: center;
+      border: 1px solid #fdc62d;
     }
 
     .purchase-header p {
-      margin: 5px 0;  /* Espacio entre los párrafos dentro de la cabecera */
+      margin: 4px 0;
     }
 
-    /* Estilo del precio total de la compra */
     .total-price {
       font-weight: bold;
-      font-size: 1.2em;
-      color: #f11d06;  /* Color rojo para el precio total */
+      font-size: 1.1rem;
+      color: #f11d06;
     }
 
-    /* Estilos para los productos comprados */
     .purchase-items {
       list-style-type: none;
       padding: 0;
+      margin: 0;
     }
 
     .purchase-item {
-      background-color: #333;  /* Fondo gris oscuro para los productos */
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #333;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
     }
 
     .purchase-item span {
       display: block;
-      margin: 5px 0;  /* Espacio entre los elementos dentro del item */
+      margin: 3px 0;
     }
 
-    .purchase-item strong {
-      color: #ffffff;  /* Texto en color blanco para los nombres de los productos */
-    }
-
-    /* Estilos del contenedor de detalles de la compra */
     #purchase-details {
-      margin-top: 20px;
+      margin-top: 15px;
     }
   </style>
 </head>
+
 <body>
-
-  <!-- Botones de navegación para cerrar sesión o volver a la página principal -->
-  <button class="btn-login2" onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
-  <button class="btn-login2" onclick="window.location.href='../index.html'">Volver a Inicio</button>
-
-  <!-- Título principal del panel de cliente -->
-  <h1>Panel de Cliente</h1>
-
-  <!-- Formulario para ingresar el código de compra y consultar los detalles -->
-  <div class="form-container">
-    <h2>Consulta con Código de Compra</h2>
-    <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
-    <button onclick="checkPurchase()">Consultar Compra</button>
+  <!-- Barra superior reutilizando estilos de styles2.css -->
+  <div class="top-bar">
+    <button class="btn-login2" onclick="logout()">Cerrar Sesión</button>
+    <button class="btn-login2" onclick="window.location.href='../index.html'">Volver a Inicio</button>
   </div>
 
-  <!-- Contenedor donde se mostrarán los detalles de la compra después de la consulta -->
-  <div id="purchase-details"></div>
+  <div class="client-container">
+    <h1>Panel de Cliente</h1>
 
+    <div class="form-container">
+      <h2>Consulta con Código de Compra</h2>
+      <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
+      <button onclick="checkPurchase()">Consultar Compra</button>
+    </div>
+
+    <div id="purchase-details"></div>
+  </div>
 </body>
 </html>
