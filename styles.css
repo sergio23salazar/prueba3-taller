@@ -1,95 +1,189 @@
 /* Importación de fuentes desde Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&family=Sacramento&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Sacramento&display=swap');
 
 /* Reglas generales para todos los elementos */
-* {
-    box-sizing: border-box; /* Asegura que el ancho y el alto incluyan el padding y el border */
+* { 
+    box-sizing: border-box;
 }
 
 /* Estilos generales para el cuerpo de la página */
 body {
-    font-family: 'Arial', sans-serif; /* Define la fuente principal */
-    background-color: rgb(0, 0, 0); /* Establece el fondo en negro */
-    margin: 0; /* Elimina el margen predeterminado */
-    color: white; /* Establece el color del texto en blanco */
+    font-family: 'Montserrat', Arial, sans-serif;
+    background-color: #000000;
+    margin: 0;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Elimina el margen de los títulos h1, h2, h3, h4, h5 */
+/* Títulos sin margen */
 h1, h2, h3, h4, h5 {
-    margin: 0; /* Elimina el margen por defecto */
+    margin: 0;
 }
 
-/* Contenedor con 100% de ancho y centrado */
+/* Contenedor genérico */
 .container {
-    width: 100%; /* Hace que el contenedor ocupe todo el ancho disponible */
-    margin: auto; /* Centra el contenedor horizontalmente */
+    width: 100%;
+    margin: auto;
 }
 
-/* Contenedor con diseño en flex para centrar los elementos */
+/* Contenedor flex genérico (por si lo usas en otras páginas) */
 .container--flex {
-    display: flex; /* Utiliza Flexbox para el diseño */
-    justify-content: center; /* Centra los elementos horizontalmente */
-    align-items: center; /* Centra los elementos verticalmente */
-    color: #fff; /* Establece el color del texto a blanco */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
 }
 
-/* Estilo para el título fuera del formulario, centrado */
+/* Contenedor específico de login/registro */
+.auth-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Tarjeta donde van los formularios */
+.auth-card {
+    background-color: #111111;
+    padding: 24px 28px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 360px;
+    margin: 0 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    border: 1px solid #333333;
+}
+
+/* Estilo para el título, centrado */
 .title {
-    text-align: center; /* Centra el texto */
-    font-family: 'Sacramento', cursive; /* Fuente cursiva 'Sacramento' */
-    font-size: 40px; /* Tamaño grande de fuente */
-    color: #fdc62d; /* Color dorado para el título */
-    margin-bottom: 20px; /* Añade espacio debajo del título */
+    text-align: center;
+    font-family: 'Sacramento', cursive;
+    font-size: 40px;
+    color: #fdc62d;
+    margin-bottom: 20px;
 }
 
-/* Estilo del formulario */
+/* Formulario */
 form {
-    background-color: #333; /* Fondo gris oscuro */
-    padding: 20px; /* Añade espacio interno en el formulario */
-    border-radius: 8px; /* Bordes redondeados */
-    width: 300px; /* Establece un ancho fijo */
-    margin: auto; /* Centra el formulario en la página */
+    background-color: transparent; /* El fondo lo maneja la tarjeta */
+    padding: 0;
+    border-radius: 8px;
+    width: 100%;
+    margin: 0;
 }
 
-/* Estilo para los inputs y selects */
+/* Contenedor del formulario en columna */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Inputs y selects */
 input, select {
-    width: 100%; /* Ancho completo de los elementos */
-    padding: 10px; /* Relleno interno */
-    margin: 10px 0; /* Márgenes superior e inferior */
-    border: none; /* Elimina el borde por defecto */
-    border-radius: 4px; /* Bordes redondeados */
-    background-color: #444; /* Fondo gris para los campos */
-    color: #fff; /* Establece el color del texto a blanco */
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 6px;
+    background-color: #222222;
+    color: #ffffff;
+    font-size: 14px;
 }
 
-/* Estilo para los botones */
+input::placeholder {
+    color: #b3b3b3;
+}
+
+/* Botones */
 button {
-    width: 100%; /* Ancho completo del botón */
-    padding: 10px; /* Relleno interno */
-    background-color: #de423a; /* Fondo rojo */
-    color: #fff; /* Establece el color del texto a blanco */
-    border: none; /* Elimina el borde del botón */
-    border-radius: 4px; /* Bordes redondeados */
-    cursor: pointer; /* Cambia el cursor a mano al pasar sobre el botón */
+    width: 100%;
+    padding: 10px;
+    background-color: #de423a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-/* Estilo para el hover en los botones */
+/* Botón principal (login/registro) */
+.primary-btn {
+    margin-top: 10px;
+}
+
+/* Hover botones */
 button:hover {
-    background-color: #d93b2a; /* Cambia el color a un tono más oscuro de rojo al pasar el cursor */
+    background-color: #d93b2a;
+    transform: translateY(-1px);
 }
 
-/* Estilo para los párrafos con texto centrado */
+/* Botón de volver */
+.back-button {
+    width: auto;
+    align-self: flex-start;
+    margin: 16px 16px 0 16px;
+    padding: 8px 16px;
+    background-color: #333333;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+/* Párrafos centrados */
 p {
-    text-align: center; /* Centra el texto de los párrafos */
+    text-align: center;
 }
 
-/* Estilo para los enlaces */
+/* Texto de cambio login/registro */
+.switch-text {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+/* Enlaces */
 a {
-    color: #fdc62d; /* Color dorado para los enlaces */
-    text-decoration: none; /* Elimina el subrayado de los enlaces */
+    color: #fdc62d;
+    text-decoration: none;
+    font-weight: 500;
 }
 
-/* Estilo para el hover en los enlaces */
+/* Hover enlaces */
 a:hover {
-    text-decoration: underline; /* Añade subrayado cuando el cursor pasa sobre el enlace */
+    text-decoration: underline;
+}
+
+/* Mensajes de estado (error, éxito, info) */
+.message {
+    margin-top: 10px;
+    font-size: 13px;
+    min-height: 18px;
+    text-align: center;
+}
+
+.message.info {
+    color: #e5e7eb;
+}
+
+.message.success {
+    color: #22c55e;
+}
+
+.message.error {
+    color: #f97373;
+}
+
+/* Responsive: en pantallas pequeñas, que no se pegue tanto a los bordes */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 20px;
+        margin: 0 12px 24px 12px;
+    }
+
+    .title {
+        font-size: 32px;
+    }
 }

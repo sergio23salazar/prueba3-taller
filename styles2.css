@@ -1,247 +1,329 @@
 /* Reset básico */
 * {
-  box-sizing: border-box; /* Establece el modelo de caja en 'border-box' para todos los elementos */
-  margin: 0; /* Elimina el margen predeterminado de todos los elementos */
-  padding: 0; /* Elimina el relleno predeterminado de todos los elementos */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 /* General */
 body {
-  font-family: 'Roboto', Arial, sans-serif; /* Establece la tipografía base */
-  background-color: #000000; /* Establece el color de fondo para la página */
-  color: #e0e0e0; /* Establece el color del texto */
-  display: flex; /* Usa flexbox para el diseño */
-  flex-direction: column; /* Organiza los elementos en columna */
-  align-items: center; /* Centra los elementos horizontalmente */
-  justify-content: flex-start; /* Alinea los elementos al inicio de la página */
-  min-height: 100vh; /* Asegura que la altura mínima sea el 100% de la ventana */
-  padding: 20px; /* Agrega relleno a la página */
+  font-family: 'Roboto', Arial, sans-serif;
+  background-color: #000000;
+  color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 20px;
 }
 
-.center-button {
+/* Títulos */
+h1, h2 {
+  color: #fdc62d;
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Barra superior */
+.top-bar {
+  width: 100%;
+  max-width: 800px;
   display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+/* Botones superiores */
+.btn-login, .btn-config {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  background-color: #fdc62d;
+  color: #ffffff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-login:hover,
+.btn-config:hover {
+  background-color: #de423a;
+}
+
+/* Botón con ícono de notificación */
+.center-button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  background-color: #fdc62d; /* Color de fondo amarillo */
-  cursor: pointer; /* Cambia el cursor a mano para indicar que es clickeable */
+  padding: 8px;
+  background-color: #fdc62d;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.center-button:hover {
+  background-color: #de423a;
+  transform: scale(1.05);
 }
 
 .img {
-  width: 20px; /* Establece el tamaño de la imagen */
-  height: 20px; /* Establece el tamaño de la imagen */
+  width: 20px;
+  height: 20px;
 }
 
-/* Estilo para la ventana emergente de notificaciones */
-.notification-window {
-  position: fixed;
-  top: 50%; /* Posiciona la ventana en el centro de la pantalla */
-  left: 50%; /* Posiciona la ventana en el centro de la pantalla */
-  transform: translate(-50%, -50%); /* Ajusta la ventana para que quede centrada */
-  background-color: #333; /* Color de fondo gris oscuro */
-  border: 1px solid #fdc62d; /* Borde amarillo */
-  padding: 20px; /* Espaciado interno */
-  width: 300px; /* Ancho de la ventana */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Sombra ligera para dar profundidad */
-  color: #fff; /* Color de texto blanco */
-}
-
-.notification-window h2 {
-  margin-top: 0; /* Elimina el margen superior */
-}
-
-.notification-window ul {
-  list-style: none; /* Elimina los puntos de lista */
-  padding: 0; /* Elimina el relleno */
-  margin: 0; /* Elimina el margen */
-}
-
-.notification-window li {
-  margin-bottom: 10px; /* Agrega espacio entre los elementos de la lista */
-  color: #000000; /* Color de texto negro para los elementos de la lista */
-}
-
-.notification-window button {
-  background-color: #fdc62d; /* Color de fondo amarillo */
-  color: #fff; /* Color de texto blanco */
-  padding: 10px 20px; /* Relleno */
-  border: none; /* Sin borde */
-  border-radius: 5px; /* Bordes redondeados */
-  cursor: pointer; /* Cambia el cursor a mano */
-}
-
-.notification-window button:hover {
-  background-color: #d93b2a; /* Color de fondo rojo cuando se pasa el cursor */
-}
-
-/* Botón de login para empleados */
-.btn-login { 
-  display: inline-block; /* Para que se comporte como un botón */
-  text-align: center; /* Centra el texto */
-  text-decoration: none; /* Sin subrayado */
-  background-color: #fdc62d; /* Color de fondo amarillo */
-  color: #ffffff; /* Color de texto blanco */
-  padding: 10px 20px; /* Relleno */
-  border: none; /* Sin borde */
-  border-radius: 5px; /* Bordes redondeados */
-  font-size: 1em; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor a mano */
-  transition: background-color 0.3s; /* Transición suave para el color de fondo */
-  margin-left: 10px; /* Espacio a la izquierda del botón */
-  margin-right: 10px; /* Espacio a la derecha del botón */
-  width: 150%; /* Ancho completo de cerrar sesión (cliente y empleado)*/
-  margin-bottom: 1px; /* Agrega margen inferior */
-}
-
-/* Botón de login para clientes */
-.btn-login2 { 
-  display: inline-block; /* Para que se comporte como un botón */
-  text-align: center; /* Centra el texto */
-  text-decoration: none; /* Sin subrayado */
-  background-color: #fdc62d; /* Color de fondo amarillo */
-  color: #ffffff; /* Color de texto blanco */
-  padding: 10px 20px; /* Relleno */
-  border: none; /* Sin borde */
-  border-radius: 5px; /* Bordes redondeados */
-  font-size: 1em; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor a mano */
-  transition: background-color 0.3s; /* Transición suave para el color de fondo */
-  margin-left: 10px; /* Espacio a la izquierda del botón */
-  margin-right: 10px; /* Espacio a la derecha del botón */
-  width: 150%; /* Ancho completo de cerrar sesión (cliente y empleado)*/
-  margin-bottom: -4px; /* Agrega margen inferior */
-}
-
-/* Estilos de hover para los botones */
-.btn-login:hover, .btn-login2:hover {
-  background-color: #de423a; /* Color de fondo rojo al pasar el cursor */
-  color: #ffffff; /* Color del texto blanco al pasar el cursor */
-}
-
-/* Estilo para la sección de opciones de notificaciones */
-#notification-options {
-  display: flex; /* Usa flexbox para organizar los elementos */
-  align-items: center; /* Centra los elementos verticalmente */
-  margin-bottom: 10px; /* Agrega margen inferior */
-  color: #000000; /* Establece el color de texto negro */
-}
-
-/* Estilo para el checkbox de notificaciones */
-#notification-switch {
-  margin-left: 10px; /* Espacio a la izquierda */
-  align-items: center; /* Alinea los elementos verticalmente */
-}
-
-/* Estilos para los títulos */
-h1, h2 {
-  color: #fdc62d; /* Color dorado para los títulos */
-  text-align: center; /* Centra los títulos */
-  margin: 20px 0; /* Márgenes superiores e inferiores */
-}
-
-/* Estilos para el formulario */
+/* Estilo general de formularios */
 form {
-  background-color: #333; /* Fondo gris oscuro */
-  border: 1px solid #333; /* Borde gris oscuro */
-  border-radius: 8px; /* Bordes redondeados */
-  padding: 20px; /* Espaciado interno */
-  width: 100%; /* Ancho completo */
-  max-width: 400px; /* Ancho máximo de 400px */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidad */
+  background-color: #333;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
 }
 
-/* Estilos para inputs y botones en formulario */
-form input, form textarea {
-  width: 100%; /* Hace que los campos ocupen todo el ancho disponible */
-  padding: 10px; /* Agrega relleno */
-  margin-bottom: 15px; /* Agrega margen debajo de cada campo */
-  border: none; /* Elimina el borde predeterminado */
-  border-radius: 4px; /* Redondea las esquinas de los campos */
-  background-color: #444; /* Fondo oscuro para los campos */
-  color: #e0e0e0; /* Color de texto gris claro */
-  font-size: 1rem; /* Tamaño de fuente */
+/* Inputs y textarea */
+form input,
+form textarea,
+form select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: #444;
+  color: #e0e0e0;
+  font-size: 1rem;
 }
 
-/* Estilos para el botón de guardar */
+form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Botones de formulario */
 form button {
-  width: 100%; /* Hace que el botón ocupe todo el ancho disponible */
-  padding: 10px; /* Relleno */
-  background-color: #fdc62d; /* Fondo amarillo */
-  border: none; /* Elimina el borde */
-  border-radius: 4px; /* Bordes redondeados */
-  color: white; /* Color de texto blanco */
-  font-size: 1rem; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor a mano */
-  transition: background-color 0.3s ease, transform 0.2s; /* Transición suave para el fondo y el escalado */
+  width: 100%;
+  padding: 10px;
+  background-color: #fdc62d;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
 }
 
-/* Estilos para el hover del botón */
 form button:hover {
-  background-color: #f44336; /* Color de fondo rojo */
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño del botón */
+  background-color: #f44336;
+  transform: scale(1.05);
 }
 
-/* Estilos para la lista de productos */
+/* Lista de productos */
 ul#product-list {
-  list-style-type: none; /* Elimina los puntos de lista */
-  padding: 0; /* Elimina el relleno */
-  width: 100%; /* Hace que la lista ocupe todo el ancho disponible */
-  max-width: 600px; /* Ancho máximo de 600px */
+  list-style-type: none;
+  padding: 0;
+  width: 100%;
+  max-width: 600px;
 }
 
 ul#product-list li {
-  background-color: #333; /* Fondo gris oscuro */
-  margin-bottom: 10px; /* Espacio entre los elementos */
-  padding: 15px; /* Relleno */
-  border-radius: 8px; /* Bordes redondeados */
-  border: 1px solid #333; /* Borde gris oscuro */
+  background-color: #333;
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #333;
 }
 
 ul#product-list li .product-info {
-  margin-bottom: 10px; /* Espacio debajo de la información del producto */
+  margin-bottom: 10px;
 }
 
 ul#product-list li .button-container {
-  display: flex; /* Usa flexbox para alinear los botones */
-  justify-content: space-between; /* Espacio entre los botones */
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-/* Estilos para los botones dentro de la lista de productos */
+/* Botones dentro de la lista de productos */
 ul#product-list li button {
-  padding: 10px; /* Relleno */
-  border-radius: 4px; /* Bordes redondeados */
-  color: rgb(255, 255, 255); /* Color blanco para el texto */
-  font-size: 1rem; /* Tamaño de fuente */
-  cursor: pointer; /* Cambia el cursor a mano */
-  transition: background-color 0.3s ease, transform 0.2s; /* Transición suave */
-}
-
-ul#product-list li button:nth-child(1) {
-  background-color: #fdc62d; /* Fondo amarillo */
-}
-
-ul#product-list li button:nth-child(2) {
-  background-color: #fdc62d; /* Fondo amarillo */
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: none;
+  background-color: #fdc62d;
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
 }
 
 ul#product-list li button:hover {
-  background-color: #f44336; /* Fondo rojo al pasar el cursor */
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño */
+  background-color: #f44336;
+  transform: scale(1.05);
 }
 
-/* Estilo para los botones de descuento y promoción */
-button.discount-button {
-  background-color: #8bc34a; /* Fondo verde para descuento */
+/* Notificación de productos con bajo stock (texto debajo de la lista) */
+#low-stock-warning {
+  margin-top: 10px;
+  max-width: 600px;
 }
 
-button.promotion-button {
-  background-color: #ff5722; /* Fondo naranja para promoción */
+#low-stock-warning h3 {
+  color: #fdc62d;
+  margin-bottom: 5px;
 }
 
-button.discount-button:hover {
-  background-color: #689f38; /* Fondo verde más oscuro al pasar el cursor */
+#low-stock-warning ul {
+  padding-left: 18px;
 }
 
-button.promotion-button:hover {
-  background-color: #f44336; /* Fondo rojo al pasar el cursor */
+/* Ventana emergente de notificaciones de stock */
+.notification-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #333;
+  border: 1px solid #fdc62d;
+  padding: 20px;
+  width: 320px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  z-index: 1001;
+}
+
+.notification-window h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.notification-window ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+
+.notification-window li {
+  margin-bottom: 8px;
+  color: #e0e0e0;
+}
+
+.notification-window button {
+  background-color: #fdc62d;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.notification-window button:hover {
+  background-color: #d93b2a;
+}
+
+/* Sección de opciones de notificación dentro de la ventana */
+#notification-options {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+/* Checkbox de notificaciones */
+#notification-switch {
+  margin-left: 10px;
+}
+
+/* Checkbox descuento/promoción */
+.checkbox-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 6px;
+  transform: scale(1.2);
+}
+
+/* Mensaje de advertencia descuento/promoción */
+#warning-message {
+  font-size: 0.85rem;
+  color: #f97373;
+  min-height: 16px;
+  margin-bottom: 10px;
+}
+
+/* POPUP CONFIG NOTIFICACIONES */
+.popup-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 999;
+}
+
+.popup-overlay.open {
+  display: block;
+}
+
+.popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #111;
+  border: 1px solid #fdc62d;
+  padding: 20px;
+  width: 320px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  z-index: 1000;
+  color: #e0e0e0;
+}
+
+.popup.open {
+  display: block;
+}
+
+.close-btn {
+  background-color: #f44336;
+  color: #ffffff;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  float: right;
+  border-radius: 50%;
+  font-size: 0.9rem;
+}
+
+.close-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .top-bar {
+    flex-wrap: wrap;
+  }
+
+  form {
+    width: 100%;
+  }
+
+  ul#product-list {
+    width: 100%;
+  }
 }

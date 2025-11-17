@@ -1,310 +1,354 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <link rel="stylesheet" href="styles2.css">
   <title>Panel de Admin</title>
-  <script type="module">
-    // Configuración de Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCGagpgCaZPtv3rrQVpiPLSUJzI3sJogGg",
-      authDomain: "crud-18998.firebaseapp.com",
-      projectId: "crud-18998",
-      storageBucket: "crud-18998.firebasestorage.app",
-      messagingSenderId: "1046471634199",
-      appId: "1:1046471634199:web:37309d7fd8825896755b52"
+  <script type="module">
+    // --------- IMPORTS FIREBASE ----------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { 
+      getDatabase, 
+      ref, 
+      set, 
+      get, 
+      child, 
+      remove 
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+    // --------- CONFIG NUEVO PROYECTO ----------
+    const firebaseConfig = { 
+      apiKey: "AIzaSyAthW2iuNy8SGUOVCzhjqEuDOIjWoDpi_A", 
+      authDomain: "crud-7fb63.firebaseapp.com", 
+      databaseURL: "https://crud-7fb63-default-rtdb.firebaseio.com", 
+      projectId: "crud-7fb63", 
+      storageBucket: "crud-7fb63.firebasestorage.app", 
+      messagingSenderId: "449296123494", 
+      appId: "1:449296123494:web:ad23ebf3e3b695ee62cfa7" 
     };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
+    const auth = getAuth(app);
 
+    // Límites de stock
+    const MIN_STOCK = 20;
+    const MAX_STOCK = 100;
 
+    // --------- PROTECCIÓN BÁSICA DE RUTA (solo admins) ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "../login&registro.html";
+        return;
+      }
 
-    // Función para guardar o actualizar un producto
+      // Verificar que está en la rama "admins"
+      try {
+        const snap = await get(ref(database, `admins/${user.uid}`));
+        if (!snap.exists()) {
+          alert("No tienes permisos de administrador.");
+          window.location.href = "../login&registro.html";
+        }
+      } catch (e) {
+        console.error("Error verificando rol de admin:", e);
+      }
+    });
+
+    // --------- FUNCIONES CRUD PRODUCTOS ----------
+
     function saveProduct(id, name, description, price, stock, discount, promotion) {
-      // Validaciones de stock
-      if (stock < MIN_STOCK) {
+      const priceNum = parseFloat(price);
+      const stockNum = parseInt(stock, 10);
+
+      if (isNaN(priceNum) || isNaN(stockNum)) {
+        alert("Precio y stock deben ser numéricos.");
+        return;
+      }
+
+      if (stockNum < MIN_STOCK) {
         alert(`El stock no puede ser menor a ${MIN_STOCK}.`);
         return;
       }
-      if (stock > MAX_STOCK) {
+      if (stockNum > MAX_STOCK) {
         alert(`El stock no puede ser mayor a ${MAX_STOCK}.`);
         return;
       }
 
-      const dbRef = ref(database, 'productos/' + id);
+      const dbRef = ref(database, "productos/" + id);
       set(dbRef, {
         name: name,
         description: description,
-        price: price,
-        stock: stock,
-        discount: discount,  // Guardamos el descuento
-        promotion: promotion // Guardamos la promoción
+        price: priceNum,
+        stock: stockNum,
+        discount: discount || "",
+        promotion: promotion || ""
       }).then(() => {
-        alert('Producto guardado correctamente');
+        alert("Producto guardado correctamente");
         loadProducts();
         clearForm();
       }).catch((error) => {
-        console.error('Error al guardar el producto:', error);
+        console.error("Error al guardar el producto:", error);
       });
     }
 
-// Función para cargar todos los productos
-function loadProducts() {
-  const dbRef = ref(database, 'productos/');
-  get(dbRef).then((snapshot) => {
-    const productList = snapshot.exists() ? snapshot.val() : {};
-    const listContainer = document.getElementById('product-list');
-    const lowStockContainer = document.getElementById('low-stock-warning');
-    listContainer.innerHTML = '';
-    lowStockContainer.innerHTML = '';
+    function loadProducts() {
+      const dbRef = ref(database, "productos/");
+      get(dbRef).then((snapshot) => {
+        const productList = snapshot.exists() ? snapshot.val() : {};
+        const listContainer = document.getElementById("product-list");
+        const lowStockContainer = document.getElementById("low-stock-warning");
+        listContainer.innerHTML = "";
+        lowStockContainer.innerHTML = "";
 
-    let lowStockAlert = '';
-    
+        let lowStockAlertHtml = "";
 
-    // Iteramos sobre los productos cargados
-    for (let id in productList) {
-      const product = productList[id];
-      const listItem = document.createElement('li');
-      let discountText = product.discount ? ` - Descuento: ${product.discount}%` : '';
-      let promotionText = product.promotion ? ` - Promoción: ${product.promotion}` : '';
+        for (let id in productList) {
+          const product = productList[id];
+          const listItem = document.createElement("li");
 
-      // Agregamos los productos a la lista
-      listItem.innerHTML = `
-        <div class="product-info">
-          <strong>Nombre:</strong> ${product.name}<br>
-          <strong>Descripción:</strong> ${product.description}<br>
-          <strong>Precio:</strong> ${product.price}<br>
-          <strong>Stock:</strong> ${product.stock}<br>
-          ${discountText} ${promotionText}
-        </div>
-        <div class="button-container">
-          <button onclick="editProduct('${id}')">Editar</button>
-          <button onclick="deleteProduct('${id}')">Eliminar</button>
-        </div>`;
-      listContainer.appendChild(listItem);
+          const discountText = product.discount 
+            ? `<br><strong>Descuento:</strong> ${product.discount}%` 
+            : "";
+          const promotionText = product.promotion 
+            ? `<br><strong>Promoción:</strong> ${product.promotion}` 
+            : "";
 
-      // Alertamos si el stock es bajo
-      if (product.stock < MIN_STOCK) {
-       /* lowStockAlert += `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`;*/
-      }
+          listItem.innerHTML = `
+            <div class="product-info">
+              <strong>Nombre:</strong> ${product.name}<br>
+              <strong>Descripción:</strong> ${product.description}<br>
+              <strong>Precio:</strong> ${product.price}<br>
+              <strong>Stock:</strong> ${product.stock}
+              ${discountText}
+              ${promotionText}
+            </div>
+            <div class="button-container">
+              <button onclick="editProduct('${id}')">Editar</button>
+              <button onclick="deleteProduct('${id}')">Eliminar</button>
+            </div>
+          `;
+          listContainer.appendChild(listItem);
+
+          if (product.stock < MIN_STOCK) {
+            lowStockAlertHtml += `<li>El producto "<strong>${product.name}</strong>" tiene un stock bajo: ${product.stock}</li>`;
+          }
+        }
+
+        if (lowStockAlertHtml) {
+          lowStockContainer.innerHTML = `
+            <h3>Productos con stock bajo:</h3>
+            <ul>${lowStockAlertHtml}</ul>
+          `;
+        }
+      }).catch((error) => {
+        console.error("Error al cargar los productos:", error);
+      });
     }
 
-    if (lowStockAlert) {
-      lowStockContainer.innerHTML = `
-        <h3>Productos con stock bajo:</h3>
-        <ul>${lowStockAlert}</ul>
-      `;
-    }
-  }).catch((error) => {
-    console.error('Error al cargar los productos:', error);
-  });
-}
-
-// Función para mostrar notificaciones de productos con stock bajo
-function showLowStockNotifications() {
-  const dbRef = ref(database, 'productos/');
-  get(dbRef).then((snapshot) => {
-    const productList = snapshot.exists() ? snapshot.val() : {};
-    const lowStockProducts = [];
-
-    // Iteramos sobre los productos cargados
-    for (let id in productList) {
-      const product = productList[id];
-      if (product.stock < MIN_STOCK) {
-        lowStockProducts.push(product);
-      }
-    }
-
-    // Mostramos las notificaciones en una ventana emergente
-    if (lowStockProducts.length > 0) {
-      const notificationWindow = document.createElement('div');
-      notificationWindow.innerHTML = `
-        <h2>Notificaciones de Productos con Stock Bajo</h2>
-        <div id="notification-options">
-          <label>Notificaciones:</label>
-        </div>
-        <ul>
-          ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
-        </ul>
-        <button onclick="closeNotificationWindow()">Cerrar</button>
-      `;
-      notificationWindow.classList.add('notification-window');
-      document.body.appendChild(notificationWindow);
-    }
-  }).catch((error) => {
-    console.error('Error al cargar los productos:', error);
-  });
-}
-
-
-window.showLowStockNotifications = showLowStockNotifications;
-window.closeNotificationWindow = closeNotificationWindow;
-
-// Función para cerrar la ventana emergente de notificaciones
-function closeNotificationWindow() {
-  const notificationWindow = document.querySelector('.notification-window');
-  if (notificationWindow) {
-    notificationWindow.remove();
-  }
-}
-    // Función para editar un producto
     function editProduct(id) {
-      const dbRef = ref(database, 'productos/' + id);
+      const dbRef = ref(database, "productos/" + id);
       get(dbRef).then((snapshot) => {
         const product = snapshot.val();
-        document.getElementById('product-id').value = id;
-        document.getElementById('product-name').value = product.name;
-        document.getElementById('product-description').value = product.description;
-        document.getElementById('product-price').value = product.price;
-        document.getElementById('product-stock').value = product.stock;
-        document.getElementById('product-discount').value = product.discount || ''; // Mostrar descuento si lo tiene
-        document.getElementById('product-promotion').value = product.promotion || ''; // Mostrar promoción si la tiene
+        document.getElementById("product-id").value = id;
+        document.getElementById("product-name").value = product.name;
+        document.getElementById("product-description").value = product.description;
+        document.getElementById("product-price").value = product.price;
+        document.getElementById("product-stock").value = product.stock;
+
+        // Checkboxes y campos de descuento/promoción
+        const discountCheckbox = document.getElementById("discount-checkbox");
+        const promotionCheckbox = document.getElementById("promotion-checkbox");
+        const discountInput = document.getElementById("product-discount");
+        const promotionInput = document.getElementById("product-promotion");
+
+        if (product.discount) {
+          discountCheckbox.checked = true;
+          discountInput.disabled = false;
+          discountInput.value = product.discount;
+        } else {
+          discountCheckbox.checked = false;
+          discountInput.disabled = true;
+          discountInput.value = "";
+        }
+
+        if (product.promotion) {
+          promotionCheckbox.checked = true;
+          promotionInput.disabled = false;
+          promotionInput.value = product.promotion;
+        } else {
+          promotionCheckbox.checked = false;
+          promotionInput.disabled = true;
+          promotionInput.value = "";
+        }
+
+      }).catch((error) => {
+        console.error("Error al obtener el producto:", error);
       });
     }
 
-    // Función para eliminar un producto
     function deleteProduct(id) {
-      const dbRef = ref(database, 'productos/' + id);
+      const dbRef = ref(database, "productos/" + id);
       remove(dbRef).then(() => {
-        alert('Producto eliminado');
+        alert("Producto eliminado");
         loadProducts();
       }).catch((error) => {
-        console.error('Error al eliminar el producto:', error);
+        console.error("Error al eliminar el producto:", error);
       });
     }
 
-    // Función para limpiar el formulario
     function clearForm() {
-      document.getElementById('product-form').reset();
-      // Resetear los campos de descuento y promoción
-      document.getElementById('product-discount').disabled = true;
-      document.getElementById('product-promotion').disabled = true;
+      const form = document.getElementById("product-form");
+      if (form) form.reset();
+
+      // Reset de descuento y promoción
+      const discountInput = document.getElementById("product-discount");
+      const promotionInput = document.getElementById("product-promotion");
+      const discountCheckbox = document.getElementById("discount-checkbox");
+      const promotionCheckbox = document.getElementById("promotion-checkbox");
+
+      discountInput.disabled = true;
+      promotionInput.disabled = true;
+      discountCheckbox.checked = false;
+      promotionCheckbox.checked = false;
+
+      document.getElementById("warning-message").textContent = "";
+      document.getElementById("product-id").value = "";
     }
 
-    // Función para manejar la selección de descuento o promoción
     function handleDiscountPromotionChange() {
-      const discountCheckbox = document.getElementById('discount-checkbox');
-      const promotionCheckbox = document.getElementById('promotion-checkbox');
-      const messageContainer = document.getElementById('warning-message');
+      const discountCheckbox = document.getElementById("discount-checkbox");
+      const promotionCheckbox = document.getElementById("promotion-checkbox");
+      const discountInput = document.getElementById("product-discount");
+      const promotionInput = document.getElementById("product-promotion");
+      const messageContainer = document.getElementById("warning-message");
 
-      // Habilitar/deshabilitar los campos según las casillas
-      document.getElementById('product-discount').disabled = !discountCheckbox.checked;
-      document.getElementById('product-promotion').disabled = !promotionCheckbox.checked;
+      discountInput.disabled = !discountCheckbox.checked;
+      promotionInput.disabled = !promotionCheckbox.checked;
 
-      // Mostrar mensaje de advertencia si no se marca una casilla
-      if (!discountCheckbox.checked && document.getElementById('product-discount').value !== '') {
-        messageContainer.textContent = 'Por favor, marque la casilla de "Descuento" antes de ingresar un valor.';
-        messageContainer.style.color = 'red';
-      } else if (!promotionCheckbox.checked && document.getElementById('product-promotion').value !== '') {
-        messageContainer.textContent = 'Por favor, marque la casilla de "Promoción" antes de ingresar un valor.';
-        messageContainer.style.color = 'red';
-      } else {
-        messageContainer.textContent = ''; // Limpiar el mensaje si no hay errores
-      }
-
-      if (!discountCheckbox.checked) {
-        document.getElementById('product-discount').value = ''; // Limpiar el campo de descuento
-      }
-      if (!promotionCheckbox.checked) {
-        document.getElementById('product-promotion').value = ''; // Limpiar el campo de promoción
-      }
+      messageContainer.textContent = "";
     }
 
+    // --------- NOTIFICACIONES DE STOCK BAJO (VENTANA EMERGENTE) ----------
+    function showLowStockNotifications() {
+      const dbRef = ref(database, "productos/");
+      get(dbRef).then((snapshot) => {
+        const productList = snapshot.exists() ? snapshot.val() : {};
+        const lowStockProducts = [];
+
+        for (let id in productList) {
+          const product = productList[id];
+          if (product.stock < MIN_STOCK) {
+            lowStockProducts.push(product);
+          }
+        }
+
+        // Eliminar notificación anterior si existe
+        const prev = document.querySelector(".notification-window");
+        if (prev) prev.remove();
+
+        if (lowStockProducts.length > 0) {
+          const notificationWindow = document.createElement("div");
+          notificationWindow.classList.add("notification-window");
+          notificationWindow.innerHTML = `
+            <h2>Productos con Stock Bajo</h2>
+            <div id="notification-options">
+              <label>Notificaciones:</label>
+            </div>
+            <ul>
+              ${lowStockProducts
+                .map(
+                  (product) =>
+                    `<li>El producto "<strong>${product.name}</strong>" tiene un stock de ${product.stock}</li>`
+                )
+                .join("")}
+            </ul>
+            <button onclick="closeNotificationWindow()">Cerrar</button>
+          `;
+          document.body.appendChild(notificationWindow);
+        } else {
+          alert("No hay productos con stock bajo.");
+        }
+      }).catch((error) => {
+        console.error("Error al cargar los productos:", error);
+      });
+    }
+
+    function closeNotificationWindow() {
+      const notificationWindow = document.querySelector(".notification-window");
+      if (notificationWindow) notificationWindow.remove();
+    }
+
+    // --------- LOGOUT ----------
+    function logout() {
+      signOut(auth)
+        .then(() => {
+          window.location.href = "../login&registro.html";
+        })
+        .catch((err) => {
+          console.error("Error al cerrar sesión:", err);
+          window.location.href = "../login&registro.html";
+        });
+    }
+
+    // --------- EXponer funciones al HTML (window.*) ----------
     window.saveProduct = saveProduct;
     window.loadProducts = loadProducts;
     window.editProduct = editProduct;
     window.deleteProduct = deleteProduct;
     window.handleDiscountPromotionChange = handleDiscountPromotionChange;
+    window.showLowStockNotifications = showLowStockNotifications;
+    window.closeNotificationWindow = closeNotificationWindow;
+    window.logout = logout;
 
-    window.onload = loadProducts;
+    // --------- INICIALIZAR AL CARGAR DOM ----------
+    window.addEventListener("DOMContentLoaded", () => {
+      loadProducts();
 
-    // Guardar un producto cuando se envíe el formulario
-    document.getElementById('product-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = document.getElementById('product-id').value || Date.now().toString();
-      const name = document.getElementById('product-name').value;
-      const description = document.getElementById('product-description').value;
-      const price = document.getElementById('product-price').value;
-      const stock = document.getElementById('product-stock').value;
-      const discount = document.getElementById('product-discount').value;
-      const promotion = document.getElementById('product-promotion').value;
-      saveProduct(id, name, description, price, stock, discount, promotion);
+      const form = document.getElementById("product-form");
+      if (form) {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const id = document.getElementById("product-id").value || Date.now().toString();
+          const name = document.getElementById("product-name").value;
+          const description = document.getElementById("product-description").value;
+          const price = document.getElementById("product-price").value;
+          const stock = document.getElementById("product-stock").value;
+          const discount = document.getElementById("product-discount").value;
+          const promotion = document.getElementById("product-promotion").value;
+
+          saveProduct(id, name, description, price, stock, discount, promotion);
+        });
+      }
     });
   </script>
-
-  <style>
-    /* Estilos para el formulario */
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 300px;
-      margin: 0 auto;
-    }
-
-    .button-container {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-
-    /* Estilos para los botones de descuento y promoción */
-    input[type="checkbox"] {
-      margin-right: 8px;
-      transform: scale(1.5);
-    }
-
-    label {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .checkbox-group {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    #warning-message {
-      font-size: 14px;
-      margin-top: 10px;
-    }
-
-    /* Estilos para el formulario de descuento y promoción */
-    .checkbox-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .checkbox-container div {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-  </style>
-
 </head>
+
 <body>
-  <button class="btn-login" onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
-  <button class="btn-login" onclick="window.location.href='../index.html'">Volver a Inicio</button>
+  <!-- Barra superior -->
+  <div class="top-bar">
+    <button class="btn-login" onclick="logout()">Cerrar Sesión</button>
+    <button class="btn-login" onclick="window.location.href='../index.html'">Volver a Inicio</button>
+    <button class="center-button" onclick="showLowStockNotifications()" title="Ver productos con stock bajo">
+      <img src="notification3.png" alt="Notificación" class="img">
+    </button>
+    <button class="btn-config" onclick="openPopup()">Configurar Notificaciones</button>
+  </div>
   
   <h1>Panel de Admin</h1>
   <h2>CRUD de Productos</h2>
 
-
   <!-- Formulario para agregar o editar un producto -->
   <form id="product-form">
-    <button class="center-button" onclick="showLowStockNotifications()"> <img src="notification3.png" alt="Notificación" class="img"> </button>    <input type="hidden" id="product-id" />
-    <button onclick="openPopup()">Abrir Configuración de Notificaciones</button>
-    <button onclick="window.location.href='../index.html'">Volver a Inicio</button>
-    <button onclick="window.location.href='../login&registro.html'">Cerrar Sesión</button>
-    <input type="text" id="product-name" placeholder="Nombre" required/>
+    <input type="hidden" id="product-id" />
+
+    <input type="text" id="product-name" placeholder="Nombre" required />
     <textarea id="product-description" placeholder="Descripción" required></textarea>
     <input type="number" id="product-price" placeholder="Precio" required />
     <input type="number" id="product-stock" placeholder="Stock" required />
@@ -321,17 +365,14 @@ function closeNotificationWindow() {
       </div>
     </div>
 
-    <!-- Campo de descuento -->
     <div>
       <input type="number" id="product-discount" placeholder="Descuento (%)" disabled />
     </div>
 
-    <!-- Campo de promoción -->
     <div>
       <input type="text" id="product-promotion" placeholder="Promoción" disabled />
     </div>
 
-    <!-- Mensaje de advertencia -->
     <div id="warning-message"></div>
 
     <button type="submit">Guardar Producto</button>
@@ -341,6 +382,7 @@ function closeNotificationWindow() {
   <ul id="product-list"></ul>
 
   <div id="low-stock-warning"></div>
+
   <h1>Generar Informe de Ventas</h1>
   <form id="reportForm">
     <label for="startDate">Fecha de Inicio:</label>
@@ -352,227 +394,104 @@ function closeNotificationWindow() {
     <label for="format">Formato:</label>
     <select id="format" name="format" required>
       <option value="pdf">PDF</option>
-      <option value="excel">Excel</option>
-    </select>
-    <br>
+      <option value="excel">Excel</option> 
+    </select> 
+    <br> 
     <button type="submit">Generar Informe</button>
   </form>
 
-  <script>
-    document.getElementById('reportForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      const format = document.getElementById('format').value;
+  <!-- POPUP CONFIG NOTIFICACIONES -->
+  <div class="popup-overlay" id="popupOverlay"></div>
 
+  <div class="popup" id="popup">
+    <button class="close-btn" onclick="closePopup()">×</button>
+    <h2>Configuración de Notificaciones</h2>
+    <form id="notificationSettingsForm">
+      <label>
+        <input type="checkbox" id="enableNotifications" checked>
+        Activar Notificaciones
+      </label><br><br>
+
+      <label>
+        Frecuencia de Notificaciones:
+        <select id="notificationFrequency"> 
+          <option value="daily">Diarias</option> 
+          <option value="weekly">Semanales</option> 
+          <option value="monthly">Mensuales</option>
+        </select>
+      </label><br><br>
+
+      <label>
+        Estilo de Notificación:
+        <select id="notificationStyle">
+          <option value="banner">Banner</option>
+          <option value="popup">Ventana Emergente</option>
+          <option value="email">Correo Electrónico</option>
+        </select>
+      </label><br><br>
+
+      <button type="button" onclick="saveSettings()">Guardar Configuración</button>
+    </form>
+    <br> 
+    <button type="button" onclick="showLowStockNotifications()">Ver Notificaciones de Stock Bajo</button> 
+  </div>
+
+  <!-- Script de popup y config (no necesita Firebase) -->
+  <script>
+    function openPopup() {
+      document.getElementById("popup").classList.add("open");
+      document.getElementById("popupOverlay").classList.add("open");
+    }
+
+    function closePopup() {
+      document.getElementById("popup").classList.remove("open");
+      document.getElementById("popupOverlay").classList.remove("open");
+    }
+
+    function saveSettings() {
+      const enableNotifications = document.getElementById("enableNotifications").checked;
+      const notificationFrequency = document.getElementById("notificationFrequency").value;
+      const notificationStyle = document.getElementById("notificationStyle").value;
+
+      alert(
+        `Configuración guardada:
+Notificaciones: ${enableNotifications ? "Activadas" : "Desactivadas"}
+Frecuencia: ${notificationFrequency}
+Estilo: ${notificationStyle}`
+      );
+
+      closePopup();
+    }
+  </script>
+
+  <script>
+    // Lógica del formulario de reportes (backend propio)
+    document.getElementById("reportForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const format = document.getElementById("format").value;
       
-      fetch('/generate-report', {
-        method: 'POST',
+      fetch("/generate-report", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ startDate, endDate, format })
-      })
+          "Content-Type": "application/json"
+        }, 
+        body: JSON.stringify({ startDate, endDate, format }) 
+      }) 
       .then(response => response.blob())
       .then(blob => {
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
+        const a = document.createElement("a");
+        a.style.display = "none";
         a.href = url;
-        a.download = `report.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        a.download = `report.${format === "pdf" ? "pdf" : "xlsx"}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => console.error("Error:", error));
     });
   </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Productos</title>
-    <style>
-        /* Estilos para la ventana emergente */
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 20px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-        .popup.open {
-            display: block;
-        }
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-        .popup-overlay.open {
-            display: block;
-        }
-        .close-btn {
-            background-color: #f44336;
-            color: rgb(255, 255, 255);
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            float: right;
-            border-radius: 50%;
-        }
-        .close-btn:hover {
-            background-color: #d32f2f;
-        }
-        .notification-window {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1001;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Botón para abrir la configuración de notificaciones -->
-    <!-- <button onclick="openPopup()">Abrir Configuración de Notificaciones</button> -->
-
-    <!-- Fondo de la ventana emergente -->
-    <div class="popup-overlay" id="popupOverlay"></div>
-
-    <!-- Ventana emergente de configuración -->
-    <div class="popup" id="popup">
-        <button class="close-btn" onclick="closePopup()">×</button>
-        <h2>Configuración de Notificaciones</h2>
-        <form id="notificationSettingsForm">
-            <label>
-                <input type="checkbox" id="enableNotifications" checked>
-                Activar Notificaciones
-            </label><br><br>
-
-            <label>
-                Frecuencia de Notificaciones:
-                <select id="notificationFrequency">
-                    <option value="daily">Diarias</option>
-                    <option value="weekly">Semanales</option>
-                    <option value="monthly">Mensuales</option>
-                </select>
-            </label><br><br>
-
-            <label>
-                Estilo de Notificación:
-                <select id="notificationStyle">
-                    <option value="banner">Banner</option>
-                    <option value="popup">Ventana Emergente</option>
-                    <option value="email">Correo Electrónico</option>
-                </select>
-            </label><br><br>
-
-            <button type="button" onclick="saveSettings()">Guardar Configuración</button>
-        </form>
-        <br>
-        <!-- Botón para ver las notificaciones de bajo stock -->
-        <button onclick="showLowStockNotifications()">Ver Notificaciones de Stock Bajo</button>
-    </div>
-
-    <script>
-        const MIN_STOCK = 20; // Stock mínimo
-        const MAX_STOCK = 100; // Stock máximo
-
-        // Función para abrir la ventana emergente
-        function openPopup() {
-            document.getElementById('popup').classList.add('open');
-            document.getElementById('popupOverlay').classList.add('open');
-        }
-
-        // Función para cerrar la ventana emergente
-        function closePopup() {
-            document.getElementById('popup').classList.remove('open');
-            document.getElementById('popupOverlay').classList.remove('open');
-        }
-
-        // Función para guardar la configuración de notificaciones
-        function saveSettings() {
-            const enableNotifications = document.getElementById('enableNotifications').checked;
-            const notificationFrequency = document.getElementById('notificationFrequency').value;
-            const notificationStyle = document.getElementById('notificationStyle').value;
-
-            // Aquí puedes agregar el código para almacenar o procesar los ajustes
-            alert(`Configuración guardada:
-                Notificaciones: ${enableNotifications ? 'Activadas' : 'Desactivadas'}
-                Frecuencia: ${notificationFrequency}
-                Estilo: ${notificationStyle}
-            `);
-
-            closePopup(); // Cerrar la ventana emergente después de guardar
-        }
-
-        // Función para mostrar las notificaciones de productos con stock bajo
-        function showLowStockNotifications() {
-            const productList = {};
-
-            const lowStockProducts = [];
-            for (let id in productList) {
-                const product = productList[id];
-                if (product.stock < MIN_STOCK) {
-                    lowStockProducts.push(product);
-                }
-            }
-
-            if (lowStockProducts.length > 0) {
-                const notificationWindow = document.createElement('div');
-                notificationWindow.classList.add('notification-window');
-                notificationWindow.innerHTML = `
-                    <h2>Notificaciones de Productos con Stock Bajo</h2>
-                    <div id="notification-options">
-                        <label>Notificaciones:</label>
-                        <input type="checkbox" id="notification-switch" onchange="saveConfig()">
-                        <span>Activar notificaciones</span>
-                    </div>
-                    <ul>
-                        ${lowStockProducts.map((product) => `<li>El producto "${product.name}" tiene un stock bajo: ${product.stock}</li>`).join('')}
-                    </ul>
-                    <button onclick="closeNotificationWindow()">Cerrar</button>
-                `;
-                document.body.appendChild(notificationWindow);
-            } else {
-                alert("No hay productos con stock bajo.");
-            }
-        }
-
-        // Función para cerrar la ventana emergente de notificaciones
-        function closeNotificationWindow() {
-            const notificationWindow = document.querySelector('.notification-window');
-            if (notificationWindow) {
-                notificationWindow.remove();
-            }
-        }
-
-        // Función para guardar la configuración de notificaciones (simulada)
-        function saveConfig() {
-            const notificationSwitch = document.getElementById('notification-switch');
-            // Aquí puedes guardar la configuración de notificaciones en Firebase o en tu base de datos
-            console.log('Configuración de notificaciones guardada:', notificationSwitch.checked);
-        }
-    </script>
-
-</body>
+</body> 
 </html>
