@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="es"> 
-<head> 
-  <meta charset="UTF-8"> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles2.css">
+  <link rel="stylesheet" href="admin.css">
   <title>Panel de Cliente</title>
 
   <script type="module">
-    // Importamos las librerías necesarias de Firebase
+    // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
     import {
@@ -16,7 +17,6 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-    // NUEVA CONFIGURACIÓN FIREBASE (mismo proyecto que login/admin/empleado)
     const firebaseConfig = {
       apiKey: "AIzaSyAthW2iuNy8SGUOVCzhjqEuDOIjWoDpi_A",
       authDomain: "crud-7fb63.firebaseapp.com",
@@ -27,12 +27,11 @@
       appId: "1:449296123494:web:ad23ebf3e3b695ee62cfa7"
     };
 
-    // Inicializamos Firebase
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
 
-    // --------- PROTECCIÓN DE RUTA: SOLO CLIENTES (Y/O ADMINS) ----------
+    // Protección de ruta: solo clientes/admin
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "../login&registro.html";
@@ -46,13 +45,24 @@
         if (!clienteSnap.exists() && !adminSnap.exists()) {
           alert("No tienes permisos para acceder al panel de cliente.");
           window.location.href = "../login&registro.html";
+          return;
         }
+
+        // Nombre en sidebar
+        const sidebarName = document.getElementById("sidebar-name");
+        const sidebarAvatar = document.getElementById("sidebar-avatar");
+        const email = user.email || "";
+        let name = email ? email.split("@")[0] : "Cliente";
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+
+        if (sidebarName) sidebarName.textContent = name;
+        if (sidebarAvatar) sidebarAvatar.textContent = name.charAt(0).toUpperCase();
       } catch (error) {
         console.error("Error verificando rol de cliente:", error);
       }
     });
 
-    // --------- CONSULTAR COMPRA POR CÓDIGO ----------
+    // Consultar compra por código
     function checkPurchase() {
       const purchaseCodeInput = document.getElementById("purchase-code");
       const purchaseCode = purchaseCodeInput.value.trim();
@@ -78,7 +88,7 @@
         });
     }
 
-    // --------- MOSTRAR DETALLES DE LA COMPRA ----------
+    // Mostrar detalles de la compra
     function displayPurchaseDetails(purchaseData) {
       const detailsContainer = document.getElementById("purchase-details");
 
@@ -87,25 +97,34 @@
 
       detailsContainer.innerHTML = `
         <div class="purchase-header">
-          <h3>Detalles de la Compra</h3>
-          <p><strong>Código de Compra:</strong> ${purchaseData.code}</p>
-          <p><strong>Fecha:</strong> ${formattedDate}</p>
-          <p><strong>Total de la Compra:</strong> 
-            <span class="total-price">$${totalWithoutDecimals}</span>
-          </p>
+          <div class="purchase-header-main">
+            <div>
+              <h3>Detalles de la compra</h3>
+              <p class="purchase-code"><span>Código:</span> ${purchaseData.code}</p>
+            </div>
+            <div class="purchase-header-total">
+              <span>Total</span>
+              <span class="total-price">$${totalWithoutDecimals}</span>
+            </div>
+          </div>
+          <p class="purchase-date"><span>Fecha:</span> ${formattedDate}</p>
         </div>
-        
-        <h4>Productos Comprados:</h4>
+
+        <h4 class="purchase-items-title">Productos comprados</h4>
         <ul class="purchase-items">
           ${purchaseData.items
             .map(
               (item) => `
             <li class="purchase-item">
-              <span><strong>Producto:</strong> ${item.name}</span>
-              <span><strong>Cantidad:</strong> ${item.quantity}</span>
-              <span><strong>Total:</strong> $${Math.floor(
-                item.price * item.quantity
-              )}</span>
+              <div class="purchase-item-main">
+                <span class="purchase-item-name">${item.name}</span>
+                <span class="purchase-item-total">$${Math.floor(
+                  item.price * item.quantity
+                )}</span>
+              </div>
+              <p class="purchase-item-extra">
+                <span>Cantidad: ${item.quantity}</span>
+              </p>
             </li>
           `
             )
@@ -114,7 +133,7 @@
       `;
     }
 
-    // --------- LOGOUT ----------
+    // Logout
     function logout() {
       signOut(auth)
         .then(() => {
@@ -126,124 +145,253 @@
         });
     }
 
-    // Hacemos funciones disponibles en el contexto global
     window.checkPurchase = checkPurchase;
     window.logout = logout;
   </script>
 
-  <!-- Estilos específicos del panel de cliente (complementan styles2.css) -->
+  <!-- Estilos específicos del panel de cliente para que combine con admin.css -->
   <style>
-    .client-container {
-      width: 100%;
-      max-width: 700px;
-      margin-top: 10px;
+    .client-wrapper-card {
+      max-width: 640px;
+      margin: 0 auto;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
+    .client-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 14px;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .form-container {
-      text-align: center;
-      margin-top: 10px;
-      margin-bottom: 20px;
-    }
-
-    .form-container input[type="text"] {
+    .client-form input[type="text"] {
+      flex: 1 1 220px;
       padding: 10px;
-      width: 280px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #555;
-      margin-bottom: 10px;
-      background-color: #222;
-      color: #e0e0e0;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background-color: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      outline: none;
     }
 
-    .form-container button {
-      padding: 10px 18px;
-      background-color: #fdc62d;
-      color: #ffffff;
+    .client-form input[type="text"]::placeholder {
+      color: #9ca3af;
+    }
+
+    .client-form button {
+      padding: 10px 16px;
+      border-radius: 8px;
       border: none;
-      border-radius: 6px;
+      background-color: #fdc62d;
+      color: #111827;
+      font-size: 0.9rem;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-weight: 500;
+      white-space: nowrap;
       transition: background-color 0.3s ease, transform 0.2s;
     }
 
-    .form-container button:hover {
-      background-color: #f44336;
-      transform: scale(1.03);
-    }
-
-    .purchase-header {
-      background-color: #333;
-      color: #ffffff;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      text-align: center;
-      border: 1px solid #fdc62d;
-    }
-
-    .purchase-header p {
-      margin: 4px 0;
-    }
-
-    .total-price {
-      font-weight: bold;
-      font-size: 1.1rem;
-      color: #f11d06;
-    }
-
-    .purchase-items {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .purchase-item {
-      background-color: #333;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
-    }
-
-    .purchase-item span {
-      display: block;
-      margin: 3px 0;
+    .client-form button:hover {
+      background-color: #f97316;
+      transform: translateY(-1px);
     }
 
     #purchase-details {
-      margin-top: 15px;
+      margin-top: 6px;
+    }
+
+    .purchase-header {
+      background-color: #111827;
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      margin-bottom: 12px;
+    }
+
+    .purchase-header-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .purchase-header h3 {
+      margin: 0 0 4px 0;
+      font-size: 1rem;
+      color: #fdc62d;
+    }
+
+    .purchase-code span,
+    .purchase-date span {
+      font-weight: 600;
+      color: #cbd5f5;
+    }
+
+    .purchase-code,
+    .purchase-date {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      margin: 0;
+    }
+
+    .purchase-header-total {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.85rem;
+      color: #cbd5f5;
+    }
+
+    .total-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fdc62d;
+    }
+
+    .purchase-items-title {
+      margin: 0 0 6px 0;
+      font-size: 0.95rem;
+      color: #cbd5f5;
+    }
+
+    .purchase-items {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background-color: #020617;
+      overflow: hidden;
+    }
+
+    .purchase-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      font-size: 0.9rem;
+    }
+
+    .purchase-item:last-child {
+      border-bottom: none;
+    }
+
+    .purchase-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .purchase-item-name {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .purchase-item-total {
+      font-weight: 600;
+      color: #fdc62d;
+    }
+
+    .purchase-item-extra {
+      margin: 4px 0 0 0;
+      font-size: 0.8rem;
+      color: #cbd5f5;
+    }
+
+    .purchase-item-extra span {
+      margin-right: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .purchase-header-main {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .purchase-header-total {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 
 <body>
-  <!-- Barra superior reutilizando estilos de styles2.css -->
-  <div class="top-bar">
-    <button class="btn-login2" onclick="logout()">Cerrar Sesión</button>
-    <button class="btn-login2" onclick="window.location.href='../index.html'">Volver a Inicio</button>
-  </div>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="avatar-circle" id="sidebar-avatar">C</div>
+        <div class="user-info">
+          <p class="user-name" id="sidebar-name">Cliente</p>
+          <p class="user-role">Panel de cliente</p>
+        </div>
+      </div>
 
-  <div class="client-container">
-    <h1>Panel de Cliente</h1>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">
+          <span class="nav-icon">🧾</span><span>Mis compras</span>
+        </a>
+      </nav>
 
-    <div class="form-container">
-      <h2>Consulta con Código de Compra</h2>
-      <input type="text" id="purchase-code" placeholder="Ingrese el código de compra" />
-      <button onclick="checkPurchase()">Consultar Compra</button>
-    </div>
+      <div class="sidebar-footer">
+        <small>© 2025 Muebles Concepción a Medida</small>
+      </div>
+    </aside>
 
-    <div id="purchase-details"></div>
+    <!-- Contenido principal -->
+    <main class="main-content">
+      <header class="main-header">
+        <div>
+          <h1 class="page-title">Panel de Cliente</h1>
+          <p class="page-subtitle">Consulta tus compras utilizando el código entregado por el vendedor.</p>
+        </div>
+
+        <div class="top-bar">
+          <button class="btn-login" onclick="window.location.href='../index.html'">Inicio</button>
+          <button class="btn-login" onclick="logout()">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <div class="view active-view" id="view-inicio">
+        <section class="section">
+          <div class="summary-grid">
+            <div class="summary-card">
+              <h3>Cliente</h3>
+              <p class="summary-number">1</p>
+              <span class="summary-label">Sesión activa</span>
+            </div>
+            <div class="summary-card">
+              <h3>Compras</h3>
+              <p class="summary-number">—</p>
+              <span class="summary-label">Consulta por código</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card client-wrapper-card">
+            <h2>Consultar compra</h2>
+            <p class="section-description">
+              Ingresa el código de compra que recibiste al momento de realizar tu pedido para ver el detalle.
+            </p>
+
+            <div class="client-form">
+              <input
+                type="text"
+                id="purchase-code"
+                placeholder="Ingrese el código de compra"
+              />
+              <button type="button" onclick="checkPurchase()">Consultar</button>
+            </div>
+
+            <div id="purchase-details"></div>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
 </body>
 </html>
