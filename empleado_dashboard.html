@@ -1,20 +1,22 @@
-<!DOCTYPE html> 
-<html lang="es"> 
-<head> 
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <link rel="stylesheet" href="styles2.css"> 
-  <title>Panel de Empleado</title> 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles2.css">
+  <link rel="stylesheet" href="admin.css">
+
+  <title>Panel de Empleado</title>
 
   <script type="module">
     // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { 
-      getDatabase, 
-      ref, 
-      get, 
-      update, 
-      set 
+    import {
+      getDatabase,
+      ref,
+      get,
+      update,
+      set
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
     import {
       getAuth,
@@ -53,6 +55,20 @@
         if (!empleadoSnap.exists() && !adminSnap.exists()) {
           alert("No tienes permisos para acceder al panel de empleado.");
           window.location.href = "../login&registro.html";
+          return;
+        }
+
+        // Rellenar info básica en sidebar
+        const sidebarName = document.getElementById("sidebar-name");
+        const sidebarAvatar = document.getElementById("sidebar-avatar");
+        const email = user.email || "";
+        let name = email ? email.split("@")[0] : "Empleado";
+
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+
+        if (sidebarName) sidebarName.textContent = name;
+        if (sidebarAvatar) {
+          sidebarAvatar.textContent = name.charAt(0).toUpperCase();
         }
       } catch (e) {
         console.error("Error verificando rol del usuario:", e);
@@ -65,9 +81,13 @@
       get(dbRef).then((snapshot) => {
         const productList = snapshot.exists() ? snapshot.val() : {};
         const listContainer = document.getElementById("product-list");
+        if (!listContainer) return;
         listContainer.innerHTML = "";
 
+        let totalProducts = 0;
+
         for (let id in productList) {
+          totalProducts++;
           const product = productList[id];
           const listItem = document.createElement("li");
           listItem.id = `product-${id}`;
@@ -82,11 +102,15 @@
               <input type="number" id="quantity-${id}" min="1" max="${product.stock}" value="1">
             </div>
             <div class="button-container">
-              <button onclick="addToCart('${id}')">Agregar al Carrito</button>
+              <button onclick="addToCart('${id}')">Agregar al carrito</button>
             </div>
           `;
           listContainer.appendChild(listItem);
         }
+
+        // Actualizar resumen en Inicio
+        const productsCountEl = document.getElementById("products-count");
+        if (productsCountEl) productsCountEl.textContent = totalProducts;
       }).catch((error) => {
         console.error("Error al cargar los productos:", error);
       });
@@ -124,7 +148,7 @@
           }
 
           updateProductStockInFrontend(id, currentFrontStock - quantity);
-          updateCartDisplay(); // sin alert, solo se ve reflejado en el carrito
+          updateCartDisplay();
         } else {
           alert(`No hay suficiente stock para el producto ${product.name}. Solo hay ${currentFrontStock} disponibles.`);
         }
@@ -159,6 +183,7 @@
     // --------- MOSTRAR CARRITO ----------
     function updateCartDisplay() {
       const cartContainer = document.getElementById("cart-list");
+      if (!cartContainer) return;
       cartContainer.innerHTML = "";
 
       cart.forEach(item => {
@@ -167,14 +192,24 @@
           <div class="cart-item">
             <strong>Producto:</strong> ${item.name}<br>
             <strong>Cantidad:</strong> ${item.quantity}<br>
-            <strong>Precio:</strong> ${item.price * item.quantity}
+            <strong>Precio total:</strong> ${item.price * item.quantity}
             <button onclick="removeFromCart('${item.id}')">Eliminar</button>
           </div>
         `;
         cartContainer.appendChild(listItem);
       });
 
-      document.getElementById("cart-total").textContent = `Total: ${getCartTotal()}`;
+      const totalElement = document.getElementById("cart-total");
+      if (totalElement) {
+        totalElement.textContent = `Total: ${getCartTotal()}`;
+      }
+
+      // Contador de items de carrito en la vista de Inicio
+      const cartCountEl = document.getElementById("cart-count");
+      if (cartCountEl) {
+        const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+        cartCountEl.textContent = totalItems;
+      }
     }
 
     // --------- TOTAL DEL CARRITO ----------
@@ -204,7 +239,10 @@
       const purchaseRef = ref(database, "compras/" + purchaseCode);
       set(purchaseRef, purchaseData).then(() => {
         alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
-        document.getElementById("purchase-code").textContent = `Código de compra: ${purchaseCode}`;
+        const codeElement = document.getElementById("purchase-code");
+        if (codeElement) {
+          codeElement.textContent = `Código de compra: ${purchaseCode}`;
+        }
 
         // Actualizar stock real en Firebase
         cart.forEach(item => {
@@ -235,8 +273,13 @@
     }
 
     function clearCartForm() {
-      document.getElementById("cart-list").innerHTML = "";
-      document.getElementById("cart-total").textContent = "Total: 0";
+      const cartList = document.getElementById("cart-list");
+      const totalElement = document.getElementById("cart-total");
+      const cartCountEl = document.getElementById("cart-count");
+
+      if (cartList) cartList.innerHTML = "";
+      if (totalElement) totalElement.textContent = "Total: 0";
+      if (cartCountEl) cartCountEl.textContent = "0";
     }
 
     // --------- LOGOUT ----------
@@ -251,7 +294,7 @@
         });
     }
 
-    // Exponer funciones al scope global para uso en HTML
+    // Exponer funciones al scope global
     window.addToCart = addToCart;
     window.removeFromCart = removeFromCart;
     window.checkout = checkout;
@@ -260,24 +303,248 @@
     // Cargar productos al iniciar
     window.addEventListener("DOMContentLoaded", () => {
       loadProducts();
+      initNav();
     });
+
+    // --------- NAVEGACIÓN DE VISTAS (similar al panel admin) ----------
+    function initNav() {
+      const navItems = document.querySelectorAll(".nav-item");
+      const views = document.querySelectorAll(".view");
+
+      navItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          const target = item.dataset.view;
+          if (!target) return;
+
+          navItems.forEach(i => i.classList.remove("active"));
+          item.classList.add("active");
+
+          views.forEach(v => {
+            if (v.id === "view-" + target) {
+              v.classList.add("active-view");
+            } else {
+              v.classList.remove("active-view");
+            }
+          });
+        });
+      });
+    }
   </script>
 
   <!-- Estilos propios del panel de empleado (complementan styles2.css) -->
   <style>
+    /* Ajustes de layout tipo dashboard reutilizando clases del admin */
+
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .avatar-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #111827;
+      font-size: 1.1rem;
+    }
+
+    .user-info .user-name {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .user-info .user-role {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: #e5e7eb;
+      text-decoration: none;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .nav-item .nav-icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-item.active,
+    .nav-item:hover {
+      background: #1f2937;
+      color: #fbbf24;
+    }
+
+    .sidebar-footer {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .main-content {
+      flex: 1;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #1f2937;
+      padding-bottom: 10px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .page-subtitle {
+      margin: 2px 0 0 0;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-login {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-login:hover {
+      background: #1f2937;
+      transform: translateY(-1px);
+    }
+
+    .section {
+      margin-top: 4px;
+    }
+
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .section-description {
+      margin: 4px 0 12px 0;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .summary-card {
+      background: radial-gradient(circle at top, #111827, #020617);
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      padding: 12px 14px;
+    }
+
+    .summary-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    .summary-number {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+
+    .summary-label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .active-view {
+      display: block;
+    }
+
     /* Lista de productos */
     #product-list {
       list-style-type: none;
       padding: 0;
       width: 100%;
-      max-width: 600px;
     }
 
     .product-info {
-      background-color: #333;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      background-color: #020617;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
       margin-bottom: 10px;
       font-size: 0.95rem;
     }
@@ -288,14 +555,14 @@
     }
 
     .product-info input[type="number"] {
-      width: 100px;          /* Más grande */
-      padding: 6px;          /* Un poco más de padding */
+      width: 110px;
+      padding: 6px;
       margin-top: 5px;
-      border-radius: 4px;
-      border: none;
-      background-color: #444;
+      border-radius: 6px;
+      border: 1px solid #1f2937;
+      background-color: #020617;
       color: #e0e0e0;
-      font-size: 0.95rem;    /* Letra un poco más grande */
+      font-size: 0.95rem;
     }
 
     .button-container {
@@ -305,18 +572,19 @@
 
     .button-container button {
       padding: 6px 12px;
-      border-radius: 4px;
+      border-radius: 999px;
       border: none;
-      background-color: #fdc62d;
-      color: #ffffff;
+      background-color: #fbbf24;
+      color: #111827;
       cursor: pointer;
       font-size: 0.85rem;
+      font-weight: 500;
       transition: background-color 0.3s ease, transform 0.2s;
     }
 
     .button-container button:hover {
-      background-color: #f44336;
-      transform: scale(1.05);
+      background-color: #f97316;
+      transform: translateY(-1px);
     }
 
     /* Carrito de compras */
@@ -324,86 +592,188 @@
       list-style-type: none;
       padding: 0;
       width: 100%;
-      max-width: 600px;
     }
 
     .cart-item {
-      background-color: #444;
+      background-color: #020617;
       padding: 12px;
       margin-bottom: 8px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
       font-size: 0.95rem;
     }
 
     .cart-item button {
       margin-top: 6px;
       padding: 5px 10px;
-      border-radius: 4px;
+      border-radius: 999px;
       border: none;
-      background-color: #fdc62d;
-      color: #ffffff;
+      background-color: #fbbf24;
+      color: #111827;
       cursor: pointer;
       font-size: 0.8rem;
       transition: background-color 0.3s ease, transform 0.2s;
     }
 
     .cart-item button:hover {
-      background-color: #f44336;
-      transform: scale(1.05);
+      background-color: #f97316;
+      transform: translateY(-1px);
     }
 
     #cart-total {
       font-size: 1rem;
       font-weight: bold;
       margin-top: 10px;
-      text-align: center;
-      color: #fdc62d;
+      text-align: right;
+      color: #fbbf24;
     }
 
     .checkout-container {
-      text-align: center;
-      margin-top: 15px;
+      text-align: right;
+      margin-top: 12px;
     }
 
     .checkout-container button {
       display: inline-block;
       padding: 10px 18px;
-      border-radius: 6px;
+      border-radius: 999px;
       border: none;
-      background-color: #fdc62d;
-      color: #ffffff;
+      background-color: #fbbf24;
+      color: #111827;
       font-size: 0.95rem;
       cursor: pointer;
+      font-weight: 500;
       transition: background-color 0.3s ease, transform 0.2s;
     }
 
     .checkout-container button:hover {
-      background-color: #f44336;
-      transform: scale(1.05);
+      background-color: #f97316;
+      transform: translateY(-1px);
+    }
+
+    #purchase-code {
+      color: #fbbf24;
+      margin-top: 10px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 
 <body>
-  <div class="top-bar">
-    <button class="btn-login" onclick="logout()">Cerrar Sesión</button>
-    <button class="btn-login" onclick="window.location.href='../index.html'">Volver a Inicio</button>
+  <div class="dashboard">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="avatar-circle" id="sidebar-avatar">E</div>
+        <div class="user-info">
+          <p class="user-name" id="sidebar-name">Empleado</p>
+          <p class="user-role">Panel de empleado</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-view="inicio">
+          <span class="nav-icon">🏠</span><span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item" data-view="productos">
+          <span class="nav-icon">📦</span><span>Productos</span>
+        </a>
+        <a href="#" class="nav-item" data-view="carrito">
+          <span class="nav-icon">🛒</span><span>Carrito</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <small>© 2025 Muebles Concepción a Medida</small>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+      <header class="main-header">
+        <div>
+          <h1 class="page-title">Panel de Empleado</h1>
+          <p class="page-subtitle">Registra ventas y gestiona el carrito de productos.</p>
+        </div>
+
+        <div class="top-bar">
+          <button class="btn-login" onclick="window.location.href='../index.html'">Inicio</button>
+          <button class="btn-login" onclick="logout()">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <!-- ===== VISTA INICIO ===== -->
+      <div id="view-inicio" class="view active-view">
+        <section class="section">
+          <div class="summary-grid">
+            <div class="summary-card">
+              <h3>Empleado</h3>
+              <p class="summary-number">1</p>
+              <span class="summary-label">Sesión activa</span>
+            </div>
+            <div class="summary-card">
+              <h3>Productos</h3>
+              <p class="summary-number" id="products-count">0</p>
+              <span class="summary-label">Productos disponibles</span>
+            </div>
+            <div class="summary-card">
+              <h3>Carrito</h3>
+              <p class="summary-number" id="cart-count">0</p>
+              <span class="summary-label">Unidades en carrito</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="card">
+            <p class="section-description">
+              Desde este panel puedes revisar el listado de productos, armar un carrito y registrar la venta en Firebase.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== VISTA PRODUCTOS ===== -->
+      <div id="view-productos" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Lista de productos</h2>
+            <p class="section-description">
+              Selecciona la cantidad que el cliente desea y agrégala al carrito.
+            </p>
+
+            <ul id="product-list">
+              <!-- productos desde Firebase -->
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== VISTA CARRITO ===== -->
+      <div id="view-carrito" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Carrito de compras</h2>
+            <p class="section-description">
+              Revisa los productos agregados antes de confirmar la venta.
+            </p>
+
+            <ul id="cart-list">
+              <!-- items de carrito -->
+            </ul>
+
+            <p id="cart-total">Total: 0</p>
+
+            <div class="checkout-container">
+              <button onclick="checkout()">Realizar venta</button>
+            </div>
+
+            <h3 id="purchase-code"></h3>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
-
-  <h1>Panel de Empleado</h1>
-
-  <h2>Lista de Productos</h2>
-  <ul id="product-list"></ul>
-
-  <h2>Carrito de Compras</h2>
-  <ul id="cart-list"></ul>
-  <p id="cart-total">Total: 0</p>
-
-  <div class="checkout-container">
-    <button onclick="checkout()">Realizar Venta</button>
-  </div>
-
-  <h3 id="purchase-code" style="color: #fdc62d; margin-top: 10px;"></h3>
 </body>
 </html>
