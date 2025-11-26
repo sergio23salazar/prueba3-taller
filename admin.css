@@ -723,3 +723,25 @@ form button:hover {
     flex-wrap: wrap;
   }
 }
+
+.avatar-circle {
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+/* Tema claro opcional */
+body.theme-light {
+  background-color: #f2f2f2;
+  color: #222;
+}
+
+body.theme-light .sidebar {
+  background-color: #ffffff;
+}
+
+body.theme-light .card,
+body.theme-light .section {
+  background-color: #ffffff;
+  color: #222;
+}

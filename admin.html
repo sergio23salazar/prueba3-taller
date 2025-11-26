@@ -39,6 +39,8 @@
 
     const MIN_STOCK = 20;
     const MAX_STOCK = 100;
+    let currentAdminUser = null;
+
 
     // --------- PROTECCIÓN BÁSICA DE RUTA (solo admins) ----------
     onAuthStateChanged(auth, async (user) => {
@@ -52,11 +54,23 @@
         if (!snap.exists()) {
           alert("No tienes permisos de administrador.");
           window.location.href = "../login&registro.html";
+          return;
         }
+
+        // ✅ Es admin, guardamos el usuario actual
+        currentAdminUser = user;
+
+        // Si el DOM YA está listo, inicializamos de una
+        if (document.readyState === "interactive" || document.readyState === "complete") {
+          initAdminProfile(currentAdminUser);
+        }
+
       } catch (e) {
         console.error("Error verificando rol de admin:", e);
       }
     });
+
+
 
     // --------- CRUD PRODUCTOS ----------
     function saveProduct(id, name, description, price, stock, discount, promotion) {
@@ -369,6 +383,120 @@ function loadClients() {
 }
 
 
+function applyTheme(theme) {
+  const body = document.body;
+  if (!body) return;
+
+  body.classList.remove("theme-dark", "theme-light");
+
+  if (theme === "claro") {
+    body.classList.add("theme-light");
+  } else {
+    body.classList.add("theme-dark");
+  }
+}
+
+function initAdminProfile(user) {
+  const nameInput = document.getElementById("admin-name");
+  const emailInput = document.getElementById("admin-email");
+  const avatarInput = document.getElementById("admin-avatar");
+  const themeSelect = document.getElementById("admin-theme");
+  const sidebarName = document.getElementById("sidebar-name");
+  const sidebarAvatar = document.getElementById("sidebar-avatar");
+  const saveBtn = document.getElementById("admin-profile-save-btn");
+
+  if (!nameInput || !emailInput || !avatarInput || !themeSelect || !saveBtn) {
+    return; // por si la vista aún no está renderizada
+  }
+
+  const uid = user.uid;
+  const storageKey = `adminProfile_${uid}`;
+
+  // Leer perfil guardado (si existe)
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {
+    console.error("Error leyendo perfil de admin:", e);
+  }
+
+  // Correo desde Firebase Auth
+  const email = user.email || (saved && saved.email) || "";
+  emailInput.value = email;
+
+  // Nombre: guardado, o derivado del correo, o "Admin"
+  let name = (saved && saved.name) || "";
+  if (!name) {
+    if (email) {
+      name = email.split("@")[0];
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+    } else {
+      name = "Admin";
+    }
+  }
+  nameInput.value = name;
+  if (sidebarName) sidebarName.textContent = name;
+
+  // Avatar: si hay URL guardada, usarla; si no, inicial por letra
+  const avatarUrl = (saved && saved.avatarUrl) || "";
+  avatarInput.value = avatarUrl;
+
+  if (sidebarAvatar) {
+    if (avatarUrl) {
+      sidebarAvatar.style.backgroundImage = `url('${avatarUrl}')`;
+      sidebarAvatar.style.backgroundSize = "cover";
+      sidebarAvatar.style.backgroundPosition = "center";
+      sidebarAvatar.textContent = "";
+    } else {
+      sidebarAvatar.style.backgroundImage = "";
+      sidebarAvatar.textContent = name.charAt(0).toUpperCase();
+    }
+  }
+
+  // Tema
+  const theme = (saved && saved.theme) || "oscuro";
+  themeSelect.value = theme;
+  applyTheme(theme);
+
+  // Guardar cambios al hacer clic
+  saveBtn.onclick = () => {
+    const newName = nameInput.value.trim() || name;
+    const newAvatar = avatarInput.value.trim();
+    const newTheme = themeSelect.value || "oscuro";
+
+    const profile = {
+      name: newName,
+      email: emailInput.value || email,
+      avatarUrl: newAvatar,
+      theme: newTheme
+    };
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(profile));
+      alert("Perfil de administrador guardado.");
+    } catch (e) {
+      console.error("Error guardando perfil de admin:", e);
+    }
+
+    // Actualizar sidebar
+    if (sidebarName) sidebarName.textContent = newName;
+
+    if (sidebarAvatar) {
+      if (newAvatar) {
+        sidebarAvatar.style.backgroundImage = `url('${newAvatar}')`;
+        sidebarAvatar.style.backgroundSize = "cover";
+        sidebarAvatar.style.backgroundPosition = "center";
+        sidebarAvatar.textContent = "";
+      } else {
+        sidebarAvatar.style.backgroundImage = "";
+        sidebarAvatar.textContent = newName.charAt(0).toUpperCase();
+      }
+    }
+
+    applyTheme(newTheme);
+  };
+}
 
 
 
@@ -452,6 +580,11 @@ function loadClients() {
       loadUsers();
       loadClients();
 
+      // 👇 Si ya tenemos al admin desde onAuthStateChanged, rellenamos el perfil
+      if (currentAdminUser) {
+        initAdminProfile(currentAdminUser);
+      }
+
       const form = document.getElementById("product-form");
       if (form) {
         form.addEventListener("submit", (e) => {
@@ -476,9 +609,9 @@ function loadClients() {
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="avatar-circle">A</div>
+        <div class="avatar-circle" id="sidebar-avatar">A</div>
         <div class="user-info">
-          <p class="user-name">Admin</p>
+          <p class="user-name" id="sidebar-name">Admin</p>
           <p class="user-role">Panel de control</p>
         </div>
       </div>
@@ -601,21 +734,23 @@ function loadClients() {
 
             <form id="admin-profile-form">
               <label>Nombre</label>
-              <input type="text" placeholder="Nombre del administrador">
+              <input type="text" id="admin-name" placeholder="Nombre del administrador">
 
               <label>Correo</label>
-              <input type="email" placeholder="admin@correo.com">
+              <input type="email" id="admin-email" placeholder="admin@correo.com" readonly>
 
               <label>Avatar (URL de imagen)</label>
-              <input type="text" placeholder="https://...">
+              <input type="text" id="admin-avatar" placeholder="https://...">
 
               <label>Tema</label>
-              <select>
-                <option>Oscuro (actual)</option>
-                <option>Claro</option>
+              <select id="admin-theme">
+                <option value="oscuro">Oscuro (actual)</option>
+                <option value="claro">Claro</option>
               </select>
 
-              <button type="button">Guardar cambios (visual)</button>
+              <button type="button" id="admin-profile-save-btn">
+                Guardar cambios
+              </button>
             </form>
           </div>
         </section>
