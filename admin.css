@@ -46,6 +46,7 @@ body {
   gap: 14px;
 }
 
+/* Avatar círculo (única definición) */
 .avatar-circle {
   width: 64px;
   height: 64px;
@@ -58,6 +59,9 @@ body {
   font-weight: 700;
   font-size: 30px;
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.5);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
 }
 
 .user-info .user-name {
@@ -724,12 +728,6 @@ form button:hover {
   }
 }
 
-.avatar-circle {
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
-}
-
 /* Tema claro opcional */
 body.theme-light {
   background-color: #f2f2f2;
@@ -740,8 +738,11 @@ body.theme-light .sidebar {
   background-color: #ffffff;
 }
 
-body.theme-light .card,
-body.theme-light .section {
+body.theme-light .main-content {
+  background: #f9fafb;
+}
+
+body.theme-light .card {
   background-color: #ffffff;
   color: #222;
 }
