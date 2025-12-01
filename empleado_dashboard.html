@@ -1,34 +1,34 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles2.css">
-  <link rel="stylesheet" href="admin.css">
-
-  <title>Panel de Empleado</title>
-
-  <script type="module">
-    // Firebase imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      get,
-      update,
-      set
-    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <link rel="stylesheet" href="styles2.css"> 
+  <link rel="stylesheet" href="admin.css"> 
+ 
+  <title>Panel de Empleado</title> 
+ 
+  <script type="module"> 
+    // Firebase imports 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js"; 
+    import { 
+      getDatabase, 
+      ref, 
+      get, 
+      update, 
+      set 
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js"; 
     import {
       getAuth,
       onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-    const firebaseConfig = {
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"; 
+ 
+    const firebaseConfig = { 
       apiKey: "AIzaSyAthW2iuNy8SGUOVCzhjqEuDOIjWoDpi_A",
-      authDomain: "crud-7fb63.firebaseapp.com",
-      databaseURL: "https://crud-7fb63-default-rtdb.firebaseio.com",
-      projectId: "crud-7fb63",
+      authDomain: "crud-7fb63.firebaseapp.com", 
+      databaseURL: "https://crud-7fb63-default-rtdb.firebaseio.com", 
+      projectId: "crud-7fb63", 
       storageBucket: "crud-7fb63.firebasestorage.app",
       messagingSenderId: "449296123494",
       appId: "1:449296123494:web:ad23ebf3e3b695ee62cfa7"
@@ -42,6 +42,7 @@
     let allProducts = {};
     let currentSearch = "";
     let currentSort = "default";
+    let currentEmployee = null;
 
     // Protección de ruta
     onAuthStateChanged(auth, async (user) => {
@@ -59,6 +60,8 @@
           window.location.href = "../login&registro.html";
           return;
         }
+
+        currentEmployee = user;
 
         const sidebarName = document.getElementById("sidebar-name");
         const sidebarAvatar = document.getElementById("sidebar-avatar");
@@ -264,67 +267,266 @@
       return cart.reduce((total, item) => total + item.price * item.quantity, 0);
     }
 
-    // Checkout
-    function checkout() {
-      if (cart.length === 0) {
-        alert("El carrito está vacío.");
-        return;
-      }
+    // Checkout: asociar compra a cliente por correo y al empleado actual
+    async function checkout() {
+      try {
+        if (cart.length === 0) {
+          alert("El carrito está vacío.");
+          return;
+        }
 
-      const purchaseCode = generatePurchaseCode();
-      const purchaseData = {
-        code: purchaseCode,
-        items: cart.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total: getCartTotal(),
-        date: new Date().toISOString()
-      };
+        if (!currentEmployee) {
+          alert("No hay empleado autenticado. Vuelve a iniciar sesión.");
+          return;
+        }
 
-      const purchaseRef = ref(database, "compras/" + purchaseCode);
-      set(purchaseRef, purchaseData).then(() => {
-        alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
+        const emailInput = document.getElementById("client-email");
+        const clientEmail = emailInput ? emailInput.value.trim() : "";
+
+        if (!clientEmail) {
+          alert("Debes ingresar el correo del cliente para registrar la venta.");
+          return;
+        }
+
+        // Buscar cliente por correo en la rama 'clientes'
+        const clientesRef = ref(database, "clientes");
+        const clientesSnap = await get(clientesRef);
+
+        if (!clientesSnap.exists()) {
+          alert("No hay clientes registrados. Pide al cliente que se registre primero.");
+          return;
+        }
+
+        const clientes = clientesSnap.val();
+        let clientUid = null;
+
+        for (const uid in clientes) {
+          const c = clientes[uid];
+          if (c && c.email && c.email.toLowerCase() === clientEmail.toLowerCase()) {
+            clientUid = uid;
+            break;
+          }
+        }
+
+        if (!clientUid) {
+          alert(
+            "Este correo no está registrado como cliente.\n\n" +
+            "Pide al cliente que se registre primero en la página de registro " +
+            "para poder asociar la compra a su cuenta y que aparezca en su historial."
+          );
+          return;
+        }
+
+        const purchaseCode = generatePurchaseCode();
+        const purchaseData = {
+          code: purchaseCode,
+          items: cart.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          total: getCartTotal(),
+          date: new Date().toISOString(),
+          userId: clientUid,
+          clientEmail: clientEmail,
+          employeeId: currentEmployee.uid,
+          employeeEmail: currentEmployee.email || null
+        };
+
+        const purchaseRef = ref(database, "compras/" + purchaseCode);
+        await set(purchaseRef, purchaseData);
+
+        alert(`Compra realizada con éxito.\nCódigo de compra: ${purchaseCode}`);
+
         const codeElement = document.getElementById("purchase-code");
         if (codeElement) {
           codeElement.textContent = `Código de compra: ${purchaseCode}`;
         }
 
-        cart.forEach(item => {
+        // Actualizar stock real en la base de datos
+        for (const item of cart) {
           const dbRef = ref(database, "productos/" + item.id);
-          get(dbRef).then((snapshot) => {
+          try {
+            const snapshot = await get(dbRef);
             const product = snapshot.val();
             if (product) {
-              const newStock = product.stock - item.quantity;
-              update(dbRef, { stock: newStock }).catch((error) => {
-                console.error(`Error al actualizar el stock de ${item.name}:`, error);
-              });
+              const newStock = (product.stock || 0) - item.quantity;
+              await update(dbRef, { stock: newStock });
             }
-          });
-        });
+          } catch (error) {
+            console.error(`Error al actualizar el stock de ${item.name}:`, error);
+          }
+        }
 
         cart = [];
         updateCartDisplay();
-        clearCartForm();
+        if (emailInput) emailInput.value = "";
         loadProducts();
-      }).catch((error) => {
-        console.error("Error al realizar la compra:", error);
-      });
+        loadSalesSummary(); // refrescar historial del empleado
+      } catch (error) {
+        console.error("Error al registrar la venta:", error);
+        alert("Ocurrió un error al registrar la venta. Revisa la consola para más detalles.");
+      }
     }
 
     function generatePurchaseCode() {
-      return Math.floor(Math.random() * 10000);
+      return Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, "0");
     }
 
     function clearCartForm() {
       const cartList = document.getElementById("cart-list");
       const totalElement = document.getElementById("cart-total");
       const cartCountEl = document.getElementById("cart-count");
+      const emailInput = document.getElementById("client-email");
 
       if (cartList) cartList.innerHTML = "";
       if (totalElement) totalElement.textContent = "Total: $0";
       if (cartCountEl) cartCountEl.textContent = "0";
+      if (emailInput) emailInput.value = "";
+    }
+
+    // Historial y balance de ventas por empleado
+    async function loadSalesSummary() {
+      const statusEl = document.getElementById("sales-status");
+      const listEl = document.getElementById("sales-list");
+      const productsBody = document.getElementById("sales-products-body");
+      const totalAmountEl = document.getElementById("sales-total-amount");
+      const totalCountEl = document.getElementById("sales-total-count");
+
+      if (listEl) listEl.innerHTML = "";
+      if (productsBody) productsBody.innerHTML = "";
+      if (statusEl) statusEl.textContent = "Cargando historial de ventas...";
+
+      if (!currentEmployee) {
+        if (statusEl) statusEl.textContent = "No hay usuario autenticado.";
+        if (totalAmountEl) totalAmountEl.textContent = "$0";
+        if (totalCountEl) totalCountEl.textContent = "0";
+        return;
+      }
+
+      try {
+        const comprasRef = ref(database, "compras");
+        const snapshot = await get(comprasRef);
+
+        if (!snapshot.exists()) {
+          if (statusEl) statusEl.textContent = "Aún no hay ventas registradas.";
+          if (totalAmountEl) totalAmountEl.textContent = "$0";
+          if (totalCountEl) totalCountEl.textContent = "0";
+          return;
+        }
+
+        const compras = snapshot.val();
+
+        const propias = Object.entries(compras)
+          .filter(([code, compra]) => compra.employeeId === currentEmployee.uid)
+          .sort((a, b) => {
+            const da = new Date(a[1].date).getTime();
+            const db = new Date(b[1].date).getTime();
+            return db - da; // recientes primero
+          });
+
+        if (propias.length === 0) {
+          if (statusEl) statusEl.textContent = "Aún no has registrado ventas.";
+          if (totalAmountEl) totalAmountEl.textContent = "$0";
+          if (totalCountEl) totalCountEl.textContent = "0";
+          return;
+        }
+
+        let totalAmount = 0;
+        let productTotals = {}; // {nombre: {qty, amount}}
+
+        propias.forEach(([code, compra]) => {
+          totalAmount += Number(compra.total || 0);
+
+          if (Array.isArray(compra.items)) {
+            compra.items.forEach(item => {
+              const name = item.name || "Producto";
+              const qty = Number(item.quantity || 0);
+              const price = Number(item.price || 0);
+              if (!productTotals[name]) {
+                productTotals[name] = { qty: 0, amount: 0 };
+              }
+              productTotals[name].qty += qty;
+              productTotals[name].amount += qty * price;
+            });
+          }
+        });
+
+        if (totalAmountEl) {
+          totalAmountEl.textContent = `$${Math.floor(totalAmount)}`;
+        }
+        if (totalCountEl) {
+          totalCountEl.textContent = propias.length.toString();
+        }
+        if (statusEl) statusEl.textContent = "";
+
+        // Tabla de productos vendidos
+        if (productsBody) {
+          Object.entries(productTotals).forEach(([name, info]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${name}</td>
+              <td>${info.qty}</td>
+              <td>$${Math.floor(info.amount)}</td>
+            `;
+            productsBody.appendChild(tr);
+          });
+        }
+
+        // Lista de ventas recientes
+        if (listEl) {
+          propias.forEach(([code, compra]) => {
+            const li = document.createElement("li");
+            li.classList.add("history-item");
+
+            const formattedDate = new Date(compra.date).toLocaleString();
+            const totalWithoutDecimals = Math.floor(compra.total || 0);
+
+            li.innerHTML = `
+              <div class="history-header">
+                <div>
+                  <h3>Venta ${code}</h3>
+                  <p class="history-date">${formattedDate}</p>
+                  <p class="history-date">
+                    Cliente: ${compra.clientEmail || "No informado"}
+                  </p>
+                </div>
+                <div class="history-total">
+                  <span>Total</span>
+                  <span class="total-price">$${totalWithoutDecimals}</span>
+                </div>
+              </div>
+              <ul class="history-items">
+                ${
+                  Array.isArray(compra.items)
+                    ? compra.items
+                        .map(
+                          item => `
+                  <li>
+                    <div class="history-item-main">
+                      <span>${item.name}</span>
+                      <span>$${Math.floor(item.price * item.quantity)}</span>
+                    </div>
+                    <p class="history-item-extra">Cantidad: ${item.quantity}</p>
+                  </li>
+                `
+                        )
+                        .join("")
+                    : ""
+                }
+              </ul>
+            `;
+            listEl.appendChild(li);
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando historial de ventas:", err);
+        if (statusEl) statusEl.textContent = "Error al cargar el historial de ventas.";
+        if (totalAmountEl) totalAmountEl.textContent = "$0";
+        if (totalCountEl) totalCountEl.textContent = "0";
+      }
     }
 
     // Filtros
@@ -384,6 +586,7 @@
       loadProducts();
       initNav();
       setupFilters();
+      // No llamamos loadSalesSummary aquí porque puede no estar currentEmployee todavía.
     });
 
     // Navegación de vistas
@@ -407,14 +610,16 @@
               v.classList.remove("active-view");
             }
           });
+
+          if (target === "historial") {
+            loadSalesSummary();
+          }
         });
       });
     }
   </script>
 
-  <!-- Solo estilos específicos del empleado; colores coherentes con admin.css -->
   <style>
-    /* Lista de productos en modo lista compacta */
     #product-list {
       list-style: none;
       padding: 0;
@@ -525,7 +730,6 @@
       transform: translateY(-1px);
     }
 
-    /* Cabecera de filtros, reusando .tables-header de admin.css */
     .tables-header {
       display: flex;
       align-items: center;
@@ -556,7 +760,6 @@
       color: #9ca3af;
     }
 
-    /* Carrito alineado con la estética del panel */
     #cart-list {
       list-style: none;
       padding: 0;
@@ -656,9 +859,121 @@
       font-size: 0.9rem;
     }
 
+    .client-email-field {
+      margin-top: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .client-email-field label {
+      font-size: 0.85rem;
+      color: #cbd5f5;
+    }
+
+    .client-email-field input[type="email"] {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(148,163,184,0.45);
+      background-color: #020617;
+      color: #e5e7eb;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .client-email-field input[type="email"]::placeholder {
+      color: #9ca3af;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      background-color: #020617;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .history-header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #fdc62d;
+    }
+
+    .history-date {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #cbd5f5;
+    }
+
+    .history-total {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #cbd5f5;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history-total .total-price {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fdc62d;
+    }
+
+    .history-items {
+      list-style: none;
+      padding: 0;
+      margin: 6px 0 0 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.25);
+      padding-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-item-extra {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #cbd5f5;
+    }
+
     @media (max-width: 900px) {
       .product-meta-row {
         flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .history-total {
         align-items: flex-start;
       }
     }
@@ -667,7 +982,6 @@
 
 <body>
   <div class="dashboard">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="avatar-circle" id="sidebar-avatar">E</div>
@@ -687,6 +1001,9 @@
         <a href="#" class="nav-item" data-view="carrito">
           <span class="nav-icon">🛒</span><span>Carrito</span>
         </a>
+        <a href="#" class="nav-item" data-view="historial">
+          <span class="nav-icon">📈</span><span>Historial</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -694,12 +1011,11 @@
       </div>
     </aside>
 
-    <!-- Contenido principal -->
     <main class="main-content">
       <header class="main-header">
         <div>
           <h1 class="page-title">Panel de Empleado</h1>
-          <p class="page-subtitle">Registra ventas y gestiona el carrito de productos.</p>
+          <p class="page-subtitle">Registra ventas, gestiona el carrito y revisa tu historial de ventas.</p>
         </div>
 
         <div class="top-bar">
@@ -708,7 +1024,6 @@
         </div>
       </header>
 
-      <!-- Inicio -->
       <div id="view-inicio" class="view active-view">
         <section class="section">
           <div class="summary-grid">
@@ -733,13 +1048,12 @@
         <section class="section">
           <div class="card">
             <p class="section-description">
-              Desde este panel puedes revisar el listado de productos, armar un carrito y registrar la venta en Firebase.
+              Desde este panel puedes revisar el listado de productos, armar un carrito, registrar la venta y consultar tu historial de ventas.
             </p>
           </div>
         </section>
       </div>
 
-      <!-- Productos -->
       <div id="view-productos" class="view">
         <section class="section">
           <div class="card">
@@ -765,23 +1079,29 @@
             </div>
 
             <ul id="product-list">
-              <!-- productos desde Firebase -->
             </ul>
           </div>
         </section>
       </div>
 
-      <!-- Carrito -->
       <div id="view-carrito" class="view">
         <section class="section">
           <div class="card">
             <h2>Carrito de compras</h2>
             <p class="section-description">
-              Revisa los productos agregados antes de confirmar la venta.
+              Revisa los productos agregados y asocia la venta a un cliente registrado por su correo.
             </p>
 
+            <div class="client-email-field">
+              <label for="client-email">Correo del cliente (registrado como cliente):</label>
+              <input
+                type="email"
+                id="client-email"
+                placeholder="correo@cliente.com"
+              >
+            </div>
+
             <ul id="cart-list">
-              <!-- items de carrito -->
             </ul>
 
             <p id="cart-total">Total: $0</p>
@@ -791,6 +1111,46 @@
             </div>
 
             <h3 id="purchase-code"></h3>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-historial" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Historial de ventas</h2>
+            <p class="section-description" id="sales-status"></p>
+
+            <div class="summary-grid" style="margin-bottom: 16px;">
+              <div class="summary-card">
+                <h3>Ventas realizadas</h3>
+                <p class="summary-number" id="sales-total-count">0</p>
+                <span class="summary-label">Comprobantes emitidos</span>
+              </div>
+              <div class="summary-card">
+                <h3>Monto total vendido</h3>
+                <p class="summary-number" id="sales-total-amount">$0</p>
+                <span class="summary-label">Suma de todas las ventas</span>
+              </div>
+            </div>
+
+            <h3>Detalle de productos vendidos</h3>
+            <div class="table-wrapper" style="margin-bottom: 16px;">
+              <table class="product-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cantidad total</th>
+                    <th>Monto total</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-products-body">
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Ventas recientes</h3>
+            <ul id="sales-list" class="history-list"></ul>
           </div>
         </section>
       </div>

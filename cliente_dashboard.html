@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html> 
+<html lang="es"> 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +10,20 @@
   <script type="module">
     // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+    import { 
+      getDatabase, 
+      ref, 
+      get, 
+      set
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
     import {
       getAuth,
       onAuthStateChanged,
-      signOut
+      signOut,
+      updateEmail,
+      updatePassword,
+      EmailAuthProvider,
+      reauthenticateWithCredential
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -30,6 +39,13 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
+
+    let currentUser = null;
+    let currentClientData = null;
+    let cart = [];
+    let allProducts = {};
+    let currentSearch = "";
+    let currentSort = "default";
 
     // Protección de ruta: solo clientes/admin
     onAuthStateChanged(auth, async (user) => {
@@ -48,89 +64,491 @@
           return;
         }
 
-        // Nombre en sidebar
+        currentUser = user;
+        currentClientData = clienteSnap.exists() ? clienteSnap.val() : null;
+
         const sidebarName = document.getElementById("sidebar-name");
         const sidebarAvatar = document.getElementById("sidebar-avatar");
         const email = user.email || "";
-        let name = email ? email.split("@")[0] : "Cliente";
-        name = name.charAt(0).toUpperCase() + name.slice(1);
+        let name = "Cliente";
+
+        if (currentClientData && currentClientData.nombreCompleto) {
+          name = currentClientData.nombreCompleto;
+        } else if (email) {
+          name = email.split("@")[0];
+          name = name.charAt(0).toUpperCase() + name.slice(1);
+        }
 
         if (sidebarName) sidebarName.textContent = name;
         if (sidebarAvatar) sidebarAvatar.textContent = name.charAt(0).toUpperCase();
+
+        // Cargar datos iniciales
+        loadProducts();
+        loadPurchaseHistory();
+        loadProfileData();
       } catch (error) {
         console.error("Error verificando rol de cliente:", error);
       }
     });
 
-    // Consultar compra por código
-    function checkPurchase() {
-      const purchaseCodeInput = document.getElementById("purchase-code");
-      const purchaseCode = purchaseCodeInput.value.trim();
-
-      if (!purchaseCode) {
-        alert("Por favor ingrese un código de compra.");
-        return;
-      }
-
-      const dbRef = ref(database, "compras/" + purchaseCode);
+    // Cargar productos
+    function loadProducts() {
+      const dbRef = ref(database, "productos/");
       get(dbRef)
         .then((snapshot) => {
-          if (snapshot.exists()) {
-            const purchaseData = snapshot.val();
-            displayPurchaseDetails(purchaseData);
-          } else {
-            alert("Código de compra no encontrado.");
-            document.getElementById("purchase-details").innerHTML = "";
+          allProducts = snapshot.exists() ? snapshot.val() : {};
+          renderProducts();
+
+          const productsCountEl = document.getElementById("products-count");
+          if (productsCountEl) {
+            productsCountEl.textContent = Object.keys(allProducts).length;
           }
         })
         .catch((error) => {
-          console.error("Error al consultar la compra:", error);
+          console.error("Error al cargar los productos:", error);
         });
     }
 
-    // Mostrar detalles de la compra
-    function displayPurchaseDetails(purchaseData) {
-      const detailsContainer = document.getElementById("purchase-details");
+    // Renderizar productos con filtros/orden
+    function renderProducts() {
+      const listContainer = document.getElementById("product-list");
+      if (!listContainer) return;
+      listContainer.innerHTML = "";
 
-      const formattedDate = new Date(purchaseData.date).toLocaleString();
-      const totalWithoutDecimals = Math.floor(purchaseData.total);
+      let entries = Object.entries(allProducts);
 
-      detailsContainer.innerHTML = `
-        <div class="purchase-header">
-          <div class="purchase-header-main">
-            <div>
-              <h3>Detalles de la compra</h3>
-              <p class="purchase-code"><span>Código:</span> ${purchaseData.code}</p>
+      if (currentSearch.trim() !== "") {
+        const term = currentSearch.toLowerCase();
+        entries = entries.filter(([id, p]) => {
+          const name = (p.name || "").toLowerCase();
+          const desc = (p.description || "").toLowerCase();
+          return name.includes(term) || desc.includes(term);
+        });
+      }
+
+      entries.sort((a, b) => {
+        const pa = a[1];
+        const pb = b[1];
+        switch (currentSort) {
+          case "stock-desc":
+            return (pb.stock || 0) - (pa.stock || 0);
+          case "stock-asc":
+            return (pa.stock || 0) - (pb.stock || 0);
+          case "name-asc":
+            return (pa.name || "").localeCompare(pb.name || "");
+          case "name-desc":
+            return (pb.name || "").localeCompare(pa.name || "");
+          default:
+            return 0;
+        }
+      });
+
+      for (const [id, product] of entries) {
+        const li = document.createElement("li");
+        li.id = `product-${id}`;
+        li.classList.add("product-list-item");
+
+        li.innerHTML = `
+          <div class="product-info">
+            <div class="product-main-row">
+              <span class="product-name">${product.name}</span>
+              <span class="product-price">$${product.price}</span>
             </div>
-            <div class="purchase-header-total">
-              <span>Total</span>
-              <span class="total-price">$${totalWithoutDecimals}</span>
+            <p class="product-description">${product.description}</p>
+            <div class="product-meta-row">
+              <span><strong>Stock:</strong> <span id="stock-${id}">${product.stock}</span></span>
+              <span class="product-qty">
+                <label for="quantity-${id}">Cantidad:</label>
+                <input type="number" id="quantity-${id}" min="1" max="${product.stock}" value="1">
+              </span>
             </div>
           </div>
-          <p class="purchase-date"><span>Fecha:</span> ${formattedDate}</p>
-        </div>
+          <div class="button-container">
+            <button type="button" onclick="addToCart('${id}')">Agregar</button>
+          </div>
+        `;
+        listContainer.appendChild(li);
+      }
 
-        <h4 class="purchase-items-title">Productos comprados</h4>
-        <ul class="purchase-items">
-          ${purchaseData.items
-            .map(
-              (item) => `
-            <li class="purchase-item">
-              <div class="purchase-item-main">
-                <span class="purchase-item-name">${item.name}</span>
-                <span class="purchase-item-total">$${Math.floor(
-                  item.price * item.quantity
-                )}</span>
+      if (entries.length === 0) {
+        const empty = document.createElement("p");
+        empty.classList.add("section-description");
+        empty.textContent = "No se encontraron productos con los filtros actuales.";
+        listContainer.appendChild(empty);
+      }
+    }
+
+    // Agregar al carrito
+    function addToCart(id) {
+      const quantityInput = document.getElementById(`quantity-${id}`);
+      const quantity = parseInt(quantityInput.value, 10);
+
+      if (isNaN(quantity) || quantity <= 0) {
+        alert("Por favor, ingrese una cantidad válida.");
+        return;
+      }
+
+      const dbRef = ref(database, "productos/" + id);
+      get(dbRef).then((snapshot) => {
+        const product = snapshot.val();
+        if (!product) {
+          alert("Producto no encontrado.");
+          return;
+        }
+
+        const currentFrontStock = parseInt(
+          document.getElementById(`stock-${id}`).textContent,
+          10
+        );
+
+        if (currentFrontStock >= quantity) {
+          const existingProduct = cart.find(item => item.id === id);
+          if (existingProduct) {
+            existingProduct.quantity += quantity;
+          } else {
+            cart.push({ ...product, id, quantity });
+          }
+
+          const newStock = currentFrontStock - quantity;
+          updateProductStockInFrontend(id, newStock);
+          updateCartDisplay();
+        } else {
+          alert(`No hay suficiente stock para el producto ${product.name}. Solo hay ${currentFrontStock} disponibles.`);
+        }
+      }).catch((error) => {
+        console.error("Error obteniendo producto:", error);
+      });
+    }
+
+    // Eliminar del carrito
+    function removeFromCart(id) {
+      const productToRemove = cart.find(item => item.id === id);
+      if (!productToRemove) return;
+
+      const stockElement = document.getElementById(`stock-${id}`);
+      if (stockElement) {
+        const currentStock = parseInt(stockElement.textContent, 10);
+        const newStock = currentStock + productToRemove.quantity;
+        stockElement.textContent = newStock;
+
+        if (allProducts[id]) {
+          allProducts[id].stock = newStock;
+        }
+      }
+
+      cart = cart.filter(item => item.id !== id);
+      updateCartDisplay();
+    }
+
+    function updateProductStockInFrontend(id, newStock) {
+      const stockElement = document.getElementById(`stock-${id}`);
+      if (stockElement) stockElement.textContent = newStock;
+      if (allProducts[id]) allProducts[id].stock = newStock;
+    }
+
+    // Mostrar carrito
+    function updateCartDisplay() {
+      const cartContainer = document.getElementById("cart-list");
+      if (!cartContainer) return;
+      cartContainer.innerHTML = "";
+
+      cart.forEach(item => {
+        const li = document.createElement("li");
+        li.classList.add("cart-list-item");
+        li.innerHTML = `
+          <div class="cart-item">
+            <div class="cart-main-row">
+              <span class="cart-product-name">${item.name}</span>
+              <span class="cart-product-total">$${item.price * item.quantity}</span>
+            </div>
+            <p class="cart-qty"><strong>Cantidad:</strong> ${item.quantity}</p>
+            <button type="button" onclick="removeFromCart('${item.id}')">Eliminar</button>
+          </div>
+        `;
+        cartContainer.appendChild(li);
+      });
+
+      const totalElement = document.getElementById("cart-total");
+      if (totalElement) totalElement.textContent = `Total: $${getCartTotal()}`;
+
+      const cartCountEl = document.getElementById("cart-count");
+      if (cartCountEl) {
+        const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+        cartCountEl.textContent = totalItems;
+      }
+    }
+
+    function getCartTotal() {
+      return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
+
+    // Checkout cliente
+    function checkout() {
+      if (!currentUser) {
+        alert("Debes iniciar sesión.");
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert("El carrito está vacío.");
+        return;
+      }
+
+      const purchaseCode = generatePurchaseCode();
+      const purchaseData = {
+        code: purchaseCode,
+        items: cart.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: getCartTotal(),
+        date: new Date().toISOString(),
+        userId: currentUser.uid
+      };
+
+      const purchaseRef = ref(database, "compras/" + purchaseCode);
+      set(purchaseRef, purchaseData).then(() => {
+        alert(`Compra realizada con éxito. Código de compra: ${purchaseCode}`);
+        const codeElement = document.getElementById("purchase-code");
+        if (codeElement) {
+          codeElement.textContent = `Código de compra: ${purchaseCode}`;
+        }
+
+        loadProducts();
+        cart = [];
+        updateCartDisplay();
+        loadPurchaseHistory();
+      }).catch((error) => {
+        console.error("Error al realizar la compra:", error);
+      });
+    }
+
+    function generatePurchaseCode() {
+      const n = Math.floor(Math.random() * 10000);
+      return n.toString().padStart(4, "0");
+    }
+
+    // Filtros productos
+    function setupFilters() {
+      const searchInput = document.getElementById("product-search-cli");
+      const sortSelect = document.getElementById("product-sort-cli");
+
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          currentSearch = searchInput.value;
+          renderProducts();
+        });
+      }
+
+      if (sortSelect) {
+        sortSelect.addEventListener("change", () => {
+          currentSort = sortSelect.value;
+          renderProducts();
+        });
+      }
+    }
+
+    function clearFilters() {
+      const searchInput = document.getElementById("product-search-cli");
+      const sortSelect = document.getElementById("product-sort-cli");
+
+      currentSearch = "";
+      currentSort = "default";
+
+      if (searchInput) searchInput.value = "";
+      if (sortSelect) sortSelect.value = "default";
+
+      renderProducts();
+    }
+
+    // Historial de compras (filtrado en frontend)
+    async function loadPurchaseHistory() {
+      const historyContainer = document.getElementById("history-list");
+      const historyStatus = document.getElementById("history-status");
+      if (!historyContainer) return;
+      historyContainer.innerHTML = "";
+      if (historyStatus) historyStatus.textContent = "Cargando historial...";
+
+      if (!currentUser) return;
+
+      try {
+        const comprasRef = ref(database, "compras");
+        const snapshot = await get(comprasRef);
+
+        if (!snapshot.exists()) {
+          if (historyStatus) historyStatus.textContent = "Aún no tienes compras registradas.";
+          return;
+        }
+
+        const compras = snapshot.val();
+
+        const propias = Object.entries(compras)
+          .filter(([code, compra]) => compra.userId === currentUser.uid)
+          .sort((a, b) => {
+            const da = new Date(a[1].date).getTime();
+            const db = new Date(b[1].date).getTime();
+            return db - da;
+          });
+
+        if (propias.length === 0) {
+          if (historyStatus) historyStatus.textContent = "Aún no tienes compras registradas.";
+          return;
+        }
+
+        propias.forEach(([code, compra]) => {
+          const totalWithoutDecimals = Math.floor(compra.total);
+          const formattedDate = new Date(compra.date).toLocaleString();
+
+          const li = document.createElement("li");
+          li.classList.add("history-item");
+          li.innerHTML = `
+            <div class="history-header">
+              <div>
+                <h3>Compra ${code}</h3>
+                <p class="history-date">${formattedDate}</p>
               </div>
-              <p class="purchase-item-extra">
-                <span>Cantidad: ${item.quantity}</span>
-              </p>
-            </li>
-          `
-            )
-            .join("")}
-        </ul>
-      `;
+              <div class="history-total">
+                <span>Total</span>
+                <span class="total-price">$${totalWithoutDecimals}</span>
+              </div>
+            </div>
+            <ul class="history-items">
+              ${compra.items.map(item => `
+                <li>
+                  <div class="history-item-main">
+                    <span>${item.name}</span>
+                    <span>$${Math.floor(item.price * item.quantity)}</span>
+                  </div>
+                  <p class="history-item-extra">Cantidad: ${item.quantity}</p>
+                </li>
+              `).join("")}
+            </ul>
+          `;
+          historyContainer.appendChild(li);
+        });
+
+        if (historyStatus) historyStatus.textContent = "";
+      } catch (err) {
+        console.error("Error cargando historial:", err);
+        if (historyStatus) {
+          historyStatus.textContent = "Error al cargar el historial.";
+        }
+      }
+    }
+
+    // Perfil de cliente
+    function loadProfileData() {
+      if (!currentUser) return;
+
+      const firstNameInput = document.getElementById("profile-firstname");
+      const lastNameInput = document.getElementById("profile-lastname");
+      const emailInput = document.getElementById("profile-email");
+
+      if (!firstNameInput || !lastNameInput || !emailInput) return;
+
+      if (currentClientData) {
+        if (currentClientData.nombre) firstNameInput.value = currentClientData.nombre;
+        if (currentClientData.apellido) lastNameInput.value = currentClientData.apellido;
+      }
+
+      emailInput.value = currentUser.email || "";
+    }
+
+    async function handleProfileSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const firstNameInput = document.getElementById("profile-firstname");
+      const lastNameInput = document.getElementById("profile-lastname");
+      const emailInput = document.getElementById("profile-email");
+      const currentPassInput = document.getElementById("profile-current-password");
+      const newPassInput = document.getElementById("profile-new-password");
+      const confirmPassInput = document.getElementById("profile-confirm-password");
+      const msgEl = document.getElementById("profile-message");
+
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+      const newEmail = emailInput.value.trim();
+      const currentPassword = currentPassInput.value.trim();
+      const newPassword = newPassInput.value.trim();
+      const confirmPassword = confirmPassInput.value.trim();
+
+      if (!firstName || !lastName || !newEmail) {
+        msgEl.textContent = "Nombre, apellido y correo son obligatorios.";
+        msgEl.className = "section-description text-error";
+        return;
+      }
+
+      if ((newPassword || confirmPassword) && newPassword !== confirmPassword) {
+        msgEl.textContent = "Las contraseñas nuevas no coinciden.";
+        msgEl.className = "section-description text-error";
+        return;
+      }
+
+      try {
+        msgEl.textContent = "Actualizando perfil...";
+        msgEl.className = "section-description";
+
+        if ((newEmail && newEmail !== currentUser.email) || newPassword) {
+          if (!currentPassword) {
+            msgEl.textContent = "Debes ingresar tu contraseña actual para cambiar correo o contraseña.";
+            msgEl.className = "section-description text-error";
+            return;
+          }
+
+          const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+          await reauthenticateWithCredential(currentUser, credential);
+        }
+
+        if (newEmail && newEmail !== currentUser.email) {
+          await updateEmail(currentUser, newEmail);
+        }
+
+        if (newPassword) {
+          if (newPassword.length < 6) {
+            msgEl.textContent = "La nueva contraseña debe tener al menos 6 caracteres.";
+            msgEl.className = "section-description text-error";
+            return;
+          }
+          await updatePassword(currentUser, newPassword);
+        }
+
+        const fullName = `${firstName} ${lastName}`;
+        const clientRef = ref(database, `clientes/${currentUser.uid}`);
+        await set(clientRef, {
+          ...(currentClientData || {}),
+          nombre: firstName,
+          apellido: lastName,
+          nombreCompleto: fullName,
+          email: newEmail,
+          updatedAt: new Date().toISOString()
+        });
+
+        currentClientData = {
+          ...(currentClientData || {}),
+          nombre: firstName,
+          apellido: lastName,
+          nombreCompleto: fullName,
+          email: newEmail
+        };
+
+        const sidebarName = document.getElementById("sidebar-name");
+        const sidebarAvatar = document.getElementById("sidebar-avatar");
+        if (sidebarName) sidebarName.textContent = fullName;
+        if (sidebarAvatar) sidebarAvatar.textContent = fullName.charAt(0).toUpperCase();
+
+        msgEl.textContent = "Perfil actualizado correctamente.";
+        msgEl.className = "section-description text-success";
+
+        currentPassInput.value = "";
+        newPassInput.value = "";
+        confirmPassInput.value = "";
+      } catch (err) {
+        console.error("Error actualizando perfil:", err);
+        msgEl.textContent = "Error al actualizar el perfil: " + (err.message || "");
+        msgEl.className = "section-description text-error";
+      }
     }
 
     // Logout
@@ -145,11 +563,49 @@
         });
     }
 
-    window.checkPurchase = checkPurchase;
+    // Navegación de vistas
+    function initNav() {
+      const navItems = document.querySelectorAll(".nav-item");
+      const views = document.querySelectorAll(".view");
+
+      navItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          const target = item.dataset.view;
+          if (!target) return;
+
+          navItems.forEach(i => i.classList.remove("active"));
+          item.classList.add("active");
+
+          views.forEach(v => {
+            if (v.id === "view-" + target) {
+              v.classList.add("active-view");
+            } else {
+              v.classList.remove("active-view");
+            }
+          });
+        });
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initNav();
+      setupFilters();
+
+      const profileForm = document.getElementById("profile-form");
+      if (profileForm) {
+        profileForm.addEventListener("submit", handleProfileSubmit);
+      }
+    });
+
+    // Exponer funciones globales
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+    window.checkout = checkout;
     window.logout = logout;
+    window.clearFilters = clearFilters;
   </script>
 
-  <!-- Estilos específicos del panel de cliente para que combine con admin.css -->
   <style>
     .client-wrapper-card {
       max-width: 640px;
@@ -165,9 +621,126 @@
       margin-bottom: 14px;
     }
 
-    .client-form input[type="text"] {
-      flex: 1 1 220px;
-      padding: 10px;
+    #product-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background-color: #020617;
+      overflow: hidden;
+    }
+
+    .product-list-item {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      background-color: #020617;
+    }
+
+    .product-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-list-item:hover {
+      background-color: #0b1120;
+    }
+
+    .product-info {
+      flex: 1;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .product-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .product-name {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .product-price {
+      font-weight: 600;
+      color: #fdc62d;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
+    .product-description {
+      font-size: 0.85rem;
+      color: #cbd5f5;
+    }
+
+    .product-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.8rem;
+    }
+
+    .product-qty label {
+      margin-right: 4px;
+    }
+
+    .product-qty input[type="number"] {
+      width: 80px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background-color: #020617;
+      color: #e5e7eb;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .product-qty input[type="number"]:focus {
+      border-color: #fdc62d;
+    }
+
+    .button-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .button-container button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      background-color: #fdc62d;
+      color: #111827;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s;
+      white-space: nowrap;
+    }
+
+    .button-container button:hover {
+      background-color: #f97316;
+      transform: translateY(-1px);
+    }
+
+    .tables-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    #product-search-cli,
+    #product-sort-cli {
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid rgba(148, 163, 184, 0.45);
       background-color: #020617;
@@ -176,41 +749,134 @@
       outline: none;
     }
 
-    .client-form input[type="text"]::placeholder {
+    #product-search-cli {
+      flex: 1 1 220px;
+    }
+
+    #product-sort-cli {
+      flex: 0 0 210px;
+    }
+
+    #product-search-cli::placeholder {
       color: #9ca3af;
     }
 
-    .client-form button {
-      padding: 10px 16px;
-      border-radius: 8px;
+    #cart-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background-color: #020617;
+      overflow: hidden;
+    }
+
+    .cart-list-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .cart-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .cart-item {
+      font-size: 0.9rem;
+    }
+
+    .cart-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .cart-product-name {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .cart-product-total {
+      font-weight: 600;
+      color: #fdc62d;
+    }
+
+    .cart-qty {
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+    }
+
+    .cart-item button {
+      padding: 5px 10px;
+      border-radius: 999px;
       border: none;
       background-color: #fdc62d;
       color: #111827;
-      font-size: 0.9rem;
       cursor: pointer;
-      font-weight: 500;
-      white-space: nowrap;
+      font-size: 0.8rem;
       transition: background-color 0.3s ease, transform 0.2s;
     }
 
-    .client-form button:hover {
+    .cart-item button:hover {
       background-color: #f97316;
       transform: translateY(-1px);
     }
 
-    #purchase-details {
-      margin-top: 6px;
+    #cart-total {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 10px;
+      text-align: right;
+      color: #fdc62d;
     }
 
-    .purchase-header {
-      background-color: #111827;
+    .checkout-container {
+      text-align: right;
+      margin-top: 12px;
+    }
+
+    .checkout-container button {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      background-color: #fdc62d;
+      color: #111827;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s;
+    }
+
+    .checkout-container button:hover {
+      background-color: #f97316;
+      transform: translateY(-1px);
+    }
+
+    #purchase-code {
+      color: #fdc62d;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-item {
       border-radius: 12px;
-      padding: 14px 16px;
       border: 1px solid rgba(148, 163, 184, 0.45);
-      margin-bottom: 12px;
+      background-color: #020617;
+      padding: 12px 14px;
     }
 
-    .purchase-header-main {
+    .history-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -218,100 +884,79 @@
       margin-bottom: 6px;
     }
 
-    .purchase-header h3 {
-      margin: 0 0 4px 0;
+    .history-header h3 {
+      margin: 0;
       font-size: 1rem;
       color: #fdc62d;
     }
 
-    .purchase-code span,
-    .purchase-date span {
-      font-weight: 600;
-      color: #cbd5f5;
-    }
-
-    .purchase-code,
-    .purchase-date {
-      font-size: 0.85rem;
-      color: #e5e7eb;
+    .history-date {
       margin: 0;
-    }
-
-    .purchase-header-total {
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      font-size: 0.85rem;
-      color: #cbd5f5;
-    }
-
-    .total-price {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #fdc62d;
-    }
-
-    .purchase-items-title {
-      margin: 0 0 6px 0;
-      font-size: 0.95rem;
-      color: #cbd5f5;
-    }
-
-    .purchase-items {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      background-color: #020617;
-      overflow: hidden;
-    }
-
-    .purchase-item {
-      padding: 10px 12px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-      font-size: 0.9rem;
-    }
-
-    .purchase-item:last-child {
-      border-bottom: none;
-    }
-
-    .purchase-item-main {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .purchase-item-name {
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .purchase-item-total {
-      font-weight: 600;
-      color: #fdc62d;
-    }
-
-    .purchase-item-extra {
-      margin: 4px 0 0 0;
       font-size: 0.8rem;
       color: #cbd5f5;
     }
 
-    .purchase-item-extra span {
-      margin-right: 10px;
+    .history-total {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #cbd5f5;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history-total .total-price {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fdc62d;
+    }
+
+    .history-items {
+      list-style: none;
+      padding: 0;
+      margin: 6px 0 0 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.25);
+      padding-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+    }
+
+    .history-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-item-extra {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #cbd5f5;
+    }
+
+    .text-error {
+      color: #fca5a5;
+    }
+
+    .text-success {
+      color: #bbf7d0;
     }
 
     @media (max-width: 900px) {
-      .purchase-header-main {
+      .product-meta-row {
         flex-direction: column;
         align-items: flex-start;
       }
 
-      .purchase-header-total {
+      .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .history-total {
         align-items: flex-start;
       }
     }
@@ -320,7 +965,6 @@
 
 <body>
   <div class="dashboard">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="avatar-circle" id="sidebar-avatar">C</div>
@@ -331,8 +975,20 @@
       </div>
 
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active">
-          <span class="nav-icon">🧾</span><span>Mis compras</span>
+        <a href="#" class="nav-item active" data-view="inicio">
+          <span class="nav-icon">🏠</span><span>Inicio</span>
+        </a>
+        <a href="#" class="nav-item" data-view="productos">
+          <span class="nav-icon">📦</span><span>Productos</span>
+        </a>
+        <a href="#" class="nav-item" data-view="carrito">
+          <span class="nav-icon">🛒</span><span>Carrito</span>
+        </a>
+        <a href="#" class="nav-item" data-view="historial">
+          <span class="nav-icon">🧾</span><span>Historial</span>
+        </a>
+        <a href="#" class="nav-item" data-view="perfil">
+          <span class="nav-icon">👤</span><span>Perfil</span>
         </a>
       </nav>
 
@@ -341,12 +997,11 @@
       </div>
     </aside>
 
-    <!-- Contenido principal -->
     <main class="main-content">
       <header class="main-header">
         <div>
           <h1 class="page-title">Panel de Cliente</h1>
-          <p class="page-subtitle">Consulta tus compras utilizando el código entregado por el vendedor.</p>
+          <p class="page-subtitle">Explora productos, arma tu carrito y revisa tus compras.</p>
         </div>
 
         <div class="top-bar">
@@ -364,30 +1019,128 @@
               <span class="summary-label">Sesión activa</span>
             </div>
             <div class="summary-card">
-              <h3>Compras</h3>
-              <p class="summary-number">—</p>
-              <span class="summary-label">Consulta por código</span>
+              <h3>Productos</h3>
+              <p class="summary-number" id="products-count">—</p>
+              <span class="summary-label">Productos disponibles</span>
+            </div>
+            <div class="summary-card">
+              <h3>Carrito</h3>
+              <p class="summary-number" id="cart-count">0</p>
+              <span class="summary-label">Unidades en carrito</span>
             </div>
           </div>
         </section>
 
         <section class="section">
           <div class="card client-wrapper-card">
-            <h2>Consultar compra</h2>
+            <h2>Bienvenido</h2>
             <p class="section-description">
-              Ingresa el código de compra que recibiste al momento de realizar tu pedido para ver el detalle.
+              Desde este panel puedes ver el catálogo, agregar productos al carrito, realizar compras y revisar tu historial.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-productos" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Lista de productos</h2>
+            <p class="section-description">
+              Selecciona la cantidad que deseas y agrégala a tu carrito.
             </p>
 
-            <div class="client-form">
+            <div class="tables-header">
               <input
                 type="text"
-                id="purchase-code"
-                placeholder="Ingrese el código de compra"
-              />
-              <button type="button" onclick="checkPurchase()">Consultar</button>
+                id="product-search-cli"
+                placeholder="Buscar por nombre o descripción"
+              >
+              <select id="product-sort-cli">
+                <option value="default">Orden original</option>
+                <option value="stock-desc">Más stock primero</option>
+                <option value="stock-asc">Menos stock primero</option>
+                <option value="name-asc">Nombre A → Z</option>
+                <option value="name-desc">Nombre Z → A</option>
+              </select>
+              <button type="button" class="btn-outline" onclick="clearFilters()">Limpiar</button>
             </div>
 
-            <div id="purchase-details"></div>
+            <ul id="product-list">
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-carrito" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Carrito de compras</h2>
+            <p class="section-description">
+              Revisa los productos agregados antes de confirmar la compra.
+            </p>
+
+            <ul id="cart-list">
+            </ul>
+
+            <p id="cart-total">Total: $0</p>
+
+            <div class="checkout-container">
+              <button onclick="checkout()">Realizar compra</button>
+            </div>
+
+            <h3 id="purchase-code"></h3>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-historial" class="view">
+        <section class="section">
+          <div class="card">
+            <h2>Historial de compras</h2>
+            <p class="section-description" id="history-status">
+            </p>
+            <ul id="history-list" class="history-list">
+            </ul>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-perfil" class="view">
+        <section class="section">
+          <div class="card client-wrapper-card">
+            <h2>Editar perfil</h2>
+            <p class="section-description">
+              Actualiza tus datos personales y, si lo deseas, cambia tu contraseña.
+            </p>
+            <form id="profile-form">
+              <label for="profile-firstname">Nombre</label>
+              <input type="text" id="profile-firstname" placeholder="Nombre">
+
+              <label for="profile-lastname">Apellido</label>
+              <input type="text" id="profile-lastname" placeholder="Apellido">
+
+              <label for="profile-email">Correo</label>
+              <input type="email" id="profile-email" placeholder="Correo electrónico">
+
+              <hr style="border-color: rgba(148,163,184,0.4); margin: 10px 0;">
+
+              <p class="section-description">
+                Para cambiar correo o contraseña, ingresa tu contraseña actual.
+              </p>
+
+              <label for="profile-current-password">Contraseña actual</label>
+              <input type="password" id="profile-current-password" placeholder="Contraseña actual">
+
+              <label for="profile-new-password">Nueva contraseña</label>
+              <input type="password" id="profile-new-password" placeholder="Nueva contraseña">
+
+              <label for="profile-confirm-password">Confirmar nueva contraseña</label>
+              <input type="password" id="profile-confirm-password" placeholder="Confirmar nueva contraseña">
+
+              <p id="profile-message" class="section-description"></p>
+
+              <button type="submit">Guardar cambios</button>
+            </form>
           </div>
         </section>
       </div>
