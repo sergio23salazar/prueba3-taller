@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head> 
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Login y Registro</title>
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <title>Login y Registro</title> 
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
     <div id="loginSection" class="auth-card" style="display:none;">
       <h2 class="title">Iniciar sesión</h2>
       <form id="loginForm" class="auth-form">
-        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
         <input type="password" id="loginPassword" placeholder="Contraseña" required>
         <button type="submit" class="primary-btn">Iniciar sesión</button>
       </form>
@@ -32,15 +32,12 @@
     <div id="registerSection" class="auth-card" style="display:block;">
       <h2 class="title">Registro</h2>
       <form id="registerForm" class="auth-form">
-        <input type="email" id="registerEmail" placeholder="Email" required>
+        <input type="text" id="registerFirstName" placeholder="Nombre" required>
+        <input type="text" id="registerLastName" placeholder="Apellido" required>
+        <input type="email" id="registerEmail" placeholder="Correo electrónico" required>
         <input type="password" id="registerPassword" placeholder="Contraseña" required>
         <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required>
-        <select id="registerUserType" required>
-          <!-- <option value="admins">Administrador</option> -->
-          <option value="empleados">Empleado</option>
-          <option value="clientes">Cliente</option>
-          
-        </select>
+        <!-- Por defecto se registra como cliente -->
         <button type="submit" class="primary-btn">Registrar</button>
       </form>
       <p class="switch-text">
@@ -68,7 +65,7 @@
       child 
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-    // NUEVA CONFIGURACIÓN FIREBASE
+    // Configuración Firebase
     const firebaseConfig = { 
       apiKey: "AIzaSyAthW2iuNy8SGUOVCzhjqEuDOIjWoDpi_A", 
       authDomain: "crud-7fb63.firebaseapp.com", 
@@ -110,20 +107,25 @@
       showMessage("registerMessage", "");
     }
 
-    // Registro de usuario (FUNCIÓN MODIFICADA)
-    async function registerUser(email, password, userType) {
+    // Registro de usuario (cliente por defecto)
+    async function registerUser(firstName, lastName, email, password) {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         const userId = user.uid;
 
-        const userRef = ref(database, `${userType}/${userId}`);
+        const fullName = `${firstName} ${lastName}`;
+
+        const userRef = ref(database, `clientes/${userId}`);
         await set(userRef, {
+          nombre: firstName,
+          apellido: lastName,
+          nombreCompleto: fullName,
           email: email,
           createdAt: new Date().toISOString()
         });
 
-        showMessage("registerMessage", "Usuario registrado correctamente ✅", "success");
+        showMessage("registerMessage", "Usuario registrado correctamente como cliente ✅", "success");
         clearForm("registerForm");
 
         // Pasar a login después de un momento
@@ -136,9 +138,8 @@
 
         let msg = "Error al registrar.";
 
-        // Manejo de errores específicos
         if (error.code === "auth/email-already-in-use") {
-          msg = "Este correo ya está registrado. Inicia sesión en lugar de registrarte.";
+          msg = "Este correo ya está registrado. Inicia sesión.";
         } else if (error.code === "auth/invalid-email") {
           msg = "El correo no tiene un formato válido.";
         } else if (error.code === "auth/weak-password") {
@@ -151,7 +152,7 @@
       }
     }
 
-    // Login de usuario (puedes dejarlo igual, solo le mejoramos el mensaje genérico)
+    // Login de usuario
     async function loginUser(email, password) {
       try {
         showMessage("loginMessage", "Iniciando sesión...", "info");
@@ -195,6 +196,8 @@
           msg = "No existe un usuario con ese correo.";
         } else if (error.code === "auth/wrong-password") {
           msg = "Contraseña incorrecta.";
+        } else if (error.code === "auth/invalid-credential") {
+          msg = "Correo o contraseña incorrectos.";
         } else if (error.code === "auth/invalid-email") {
           msg = "El correo no tiene un formato válido.";
         } else {
@@ -239,12 +242,13 @@
 
       registerForm.addEventListener("submit", (e) => {
         e.preventDefault();
+        const firstName = document.getElementById("registerFirstName").value.trim();
+        const lastName = document.getElementById("registerLastName").value.trim();
         const email = document.getElementById("registerEmail").value.trim();
         const password = document.getElementById("registerPassword").value.trim();
         const confirmPassword = document.getElementById("confirmPassword").value.trim();
-        const userType = document.getElementById("registerUserType").value;
 
-        if (!email || !password || !confirmPassword || !userType) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
           showMessage("registerMessage", "Completa todos los campos.", "error");
           return;
         }
@@ -259,7 +263,7 @@
           return;
         }
 
-        registerUser(email, password, userType);
+        registerUser(firstName, lastName, email, password);
       });
     });
   </script>
