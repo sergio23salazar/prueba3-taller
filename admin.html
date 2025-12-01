@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="admin.css">
-  <title>Panel de Admin</title>
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <link rel="stylesheet" href="admin.css"> 
+  <title>Panel de Admin</title> 
 
   <script type="module">
     // --------- IMPORTS FIREBASE ----------
@@ -19,7 +19,8 @@
     import {
       getAuth,
       onAuthStateChanged,
-      signOut
+      signOut,
+      createUserWithEmailAndPassword
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
     // --------- CONFIG NUEVO PROYECTO ----------
@@ -37,10 +38,24 @@
     const database = getDatabase(app);
     const auth = getAuth(app);
 
+    // App secundaria solo para crear usuarios sin cerrar sesión del admin
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
+
     const MIN_STOCK = 20;
     const MAX_STOCK = 100;
     let currentAdminUser = null;
 
+    function showCreateUserMessage(text, type = "info") {
+      const el = document.getElementById("create-user-message");
+      if (!el) return;
+      el.textContent = text;
+      el.className = "section-description " + (type === "error"
+        ? "text-error"
+        : type === "success"
+        ? "text-success"
+        : "");
+    }
 
     // --------- PROTECCIÓN BÁSICA DE RUTA (solo admins) ----------
     onAuthStateChanged(auth, async (user) => {
@@ -57,10 +72,10 @@
           return;
         }
 
-        // ✅ Es admin, guardamos el usuario actual
+        // Es admin, guardamos el usuario actual
         currentAdminUser = user;
 
-        // Si el DOM YA está listo, inicializamos de una
+        // Si el DOM ya está listo, inicializamos el perfil
         if (document.readyState === "interactive" || document.readyState === "complete") {
           initAdminProfile(currentAdminUser);
         }
@@ -70,7 +85,63 @@
       }
     });
 
+    // --------- CREACIÓN DE USUARIOS (ADMIN/EMPLEADO) ----------
+    async function createUserByAdmin(firstName, lastName, email, password, role) {
+      try {
+        showCreateUserMessage("Creando usuario...", "info");
 
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const newUser = userCredential.user;
+        const uid = newUser.uid;
+
+        const fullName = `${firstName} ${lastName}`;
+        const createdAt = new Date().toISOString();
+
+        let path;
+        if (role === "admin") {
+          path = `admins/${uid}`;
+        } else {
+          // por defecto empleado
+          path = `empleados/${uid}`;
+        }
+
+        const userRef = ref(database, path);
+        await set(userRef, {
+          nombre: firstName,
+          apellido: lastName,
+          nombreCompleto: fullName,
+          email: email,
+          rol: role === "admin" ? "Administrador" : "Empleado",
+          estado: "Activo",
+          createdAt: createdAt
+        });
+
+        await signOut(secondaryAuth);
+
+        showCreateUserMessage("Usuario creado correctamente.", "success");
+
+        const form = document.getElementById("create-user-form");
+        if (form) form.reset();
+
+        // refrescar tabla de usuarios
+        loadUsers();
+      } catch (error) {
+        console.error("Error al crear usuario desde admin:", error);
+        let msg = "Error al crear el usuario.";
+
+        if (error.code === "auth/email-already-in-use") {
+          msg = "Este correo ya está registrado.";
+        } else if (error.code === "auth/invalid-email") {
+          msg = "El correo no tiene un formato válido.";
+        } else if (error.code === "auth/weak-password") {
+          msg = "La contraseña es muy débil. Usa al menos 6 caracteres.";
+        } else {
+          msg = "Ocurrió un error al crear el usuario: " + error.message;
+        }
+
+        showCreateUserMessage(msg, "error");
+      }
+    }
 
     // --------- CRUD PRODUCTOS ----------
     function saveProduct(id, name, description, price, stock, discount, promotion) {
@@ -147,7 +218,6 @@
           }
         }
 
-        // 👉 actualizar cuadritos de inicio
         const productsCountEl = document.getElementById("products-count");
         if (productsCountEl) productsCountEl.textContent = totalProducts;
 
@@ -164,7 +234,6 @@
         console.error("Error al cargar los productos:", error);
       });
     }
-
 
     function editProduct(id) {
       const dbRef = ref(database, "productos/" + id);
@@ -247,259 +316,245 @@
       messageContainer.textContent = "";
     }
 
-    // --------- USERS DESDE FIREBASE ----------
-// --------- USERS DESDE FIREBASE (empleados / users / usuarios) ----------
-function loadUsers() {
-  const tbody = document.getElementById("users-table-body");
-  const status = document.getElementById("users-status");
+    // --------- USERS DESDE FIREBASE (empleados / users / usuarios) ----------
+    function loadUsers() {
+      const tbody = document.getElementById("users-table-body");
+      const status = document.getElementById("users-status");
 
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  if (status) status.textContent = "Cargando empleados desde Firebase...";
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (status) status.textContent = "Cargando empleados desde Firebase...";
 
-  const paths = ["empleados/", "users/", "usuarios/"];
+      const paths = ["empleados/", "users/", "usuarios/"];
 
-  function tryPath(i) {
-    if (i >= paths.length) {
-      if (status) status.textContent = "No se encontraron empleados en la base de datos.";
-      return;
-    }
-
-    const path = paths[i];
-    const dbRef = ref(database, path);
-
-    get(dbRef)
-      .then((snapshot) => {
-        if (!snapshot.exists()) {
-          tryPath(i + 1);
+      function tryPath(i) {
+        if (i >= paths.length) {
+          if (status) status.textContent = "No se encontraron empleados en la base de datos.";
+          const usersCountEl = document.getElementById("users-count");
+          if (usersCountEl) usersCountEl.textContent = "0";
           return;
         }
 
-        const empleados = snapshot.val();
-        tbody.innerHTML = "";
+        const path = paths[i];
+        const dbRef = ref(database, path);
 
-        let count = 0;
+        get(dbRef)
+          .then((snapshot) => {
+            if (!snapshot.exists()) {
+              tryPath(i + 1);
+              return;
+            }
 
-        for (let id in empleados) {
-          count++;
-          const emp = empleados[id];
+            const empleados = snapshot.val();
+            tbody.innerHTML = "";
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${id}</td>
-            <td>${emp.nombre || emp.name || "Sin nombre"}</td>
-            <td>${emp.email || "Sin correo"}</td>
-            <td>Empleado</td>
-            <td>${emp.estado || "Activo"}</td>
-          `;
-          tbody.appendChild(row);
-        }
+            let count = 0;
 
-        if (status) {
-          status.textContent = `Empleados cargados desde la rama "${path}".`;
-        }
+            for (let id in empleados) {
+              count++;
+              const emp = empleados[id];
 
-        // 👉 actualizar cuadrito de USERS
-        const usersCountEl = document.getElementById("users-count");
-        if (usersCountEl) usersCountEl.textContent = count;
-      })
-      .catch((err) => {
-        console.error("Error cargando empleados:", err);
-        alert("Error al leer empleados en Firebase: " + err.message);
-        if (status) status.textContent = "Error al cargar empleados. Revisa las reglas de Firebase.";
-      });
-  }
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${id}</td>
+                <td>${emp.nombre || emp.name || "Sin nombre"}</td>
+                <td>${emp.email || "Sin correo"}</td>
+                <td>${emp.rol || "Empleado"}</td>
+                <td>${emp.estado || "Activo"}</td>
+              `;
+              tbody.appendChild(row);
+            }
 
-  tryPath(0);
-}
+            if (status) {
+              status.textContent = `Empleados cargados desde la rama "${path}".`;
+            }
 
+            const usersCountEl = document.getElementById("users-count");
+            if (usersCountEl) usersCountEl.textContent = count;
+          })
+          .catch((err) => {
+            console.error("Error cargando empleados:", err);
+            alert("Error al leer empleados en Firebase: " + err.message);
+            if (status) status.textContent = "Error al cargar empleados. Revisa las reglas de Firebase.";
+          });
+      }
 
-
-
-    // --------- CLIENTES DESDE FIREBASE ----------
-// --------- CLIENTES DESDE FIREBASE (clientes / clients) ----------
-function loadClients() {
-  const tbody = document.getElementById("clients-table-body");
-  const status = document.getElementById("clients-status");
-
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  if (status) status.textContent = "Cargando clientes desde Firebase...";
-
-  const paths = ["clientes/", "clients/"];
-
-  function tryPath(i) {
-    if (i >= paths.length) {
-      if (status) status.textContent = "No se encontraron clientes en la base de datos.";
-      return;
+      tryPath(0);
     }
 
-    const path = paths[i];
-    const dbRef = ref(database, path);
+    // --------- CLIENTES DESDE FIREBASE (clientes / clients) ----------
+    function loadClients() {
+      const tbody = document.getElementById("clients-table-body");
+      const status = document.getElementById("clients-status");
 
-    get(dbRef)
-      .then((snapshot) => {
-        if (!snapshot.exists()) {
-          tryPath(i + 1);
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (status) status.textContent = "Cargando clientes desde Firebase...";
+
+      const paths = ["clientes/", "clients/"];
+
+      function tryPath(i) {
+        if (i >= paths.length) {
+          if (status) status.textContent = "No se encontraron clientes en la base de datos.";
+          const clientsCountEl = document.getElementById("clients-count");
+          if (clientsCountEl) clientsCountEl.textContent = "0";
           return;
         }
 
-        const clients = snapshot.val();
-        tbody.innerHTML = "";
+        const path = paths[i];
+        const dbRef = ref(database, path);
 
-        let count = 0;
+        get(dbRef)
+          .then((snapshot) => {
+            if (!snapshot.exists()) {
+              tryPath(i + 1);
+              return;
+            }
 
-        for (let id in clients) {
-          count++;
-          const c = clients[id];
+            const clients = snapshot.val();
+            tbody.innerHTML = "";
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${id}</td>
-            <td>${c.nombre || c.name || "Sin nombre"}</td>
-            <td>${c.email || "Sin correo"}</td>
-            <td>${c.telefono || c.phone || "Sin teléfono"}</td>
-            <td>${c.ciudad || c.city || "—"}</td>
-          `;
-          tbody.appendChild(row);
-        }
+            let count = 0;
 
-        if (status) {
-          status.textContent = `Clientes cargados desde la rama "${path}".`;
-        }
+            for (let id in clients) {
+              count++;
+              const c = clients[id];
 
-        // 👉 actualizar cuadrito de CLIENT
-        const clientsCountEl = document.getElementById("clients-count");
-        if (clientsCountEl) clientsCountEl.textContent = count;
-      })
-      .catch((err) => {
-        console.error("Error cargando clientes:", err);
-        alert("Error al leer clientes en Firebase: " + err.message);
-        if (status) status.textContent = "Error al cargar clientes. Revisa las reglas de Firebase.";
-      });
-  }
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${id}</td>
+                <td>${c.nombre || c.name || "Sin nombre"}</td>
+                <td>${c.email || "Sin correo"}</td>
+                <td>${c.telefono || c.phone || "Sin teléfono"}</td>
+                <td>${c.ciudad || c.city || "—"}</td>
+              `;
+              tbody.appendChild(row);
+            }
 
-  tryPath(0);
-}
+            if (status) {
+              status.textContent = `Clientes cargados desde la rama "${path}".`;
+            }
 
+            const clientsCountEl = document.getElementById("clients-count");
+            if (clientsCountEl) clientsCountEl.textContent = count;
+          })
+          .catch((err) => {
+            console.error("Error cargando clientes:", err);
+            alert("Error al leer clientes en Firebase: " + err.message);
+            if (status) status.textContent = "Error al cargar clientes. Revisa las reglas de Firebase.";
+          });
+      }
 
-function applyTheme(theme) {
-  const body = document.body;
-  if (!body) return;
-
-  body.classList.remove("theme-dark", "theme-light");
-
-  if (theme === "claro") {
-    body.classList.add("theme-light");
-  } else {
-    body.classList.add("theme-dark");
-  }
-}
-
-function initAdminProfile(user) {
-  const nameInput = document.getElementById("admin-name");
-  const emailInput = document.getElementById("admin-email");
-  const avatarInput = document.getElementById("admin-avatar");
-  const themeSelect = document.getElementById("admin-theme");
-  const sidebarName = document.getElementById("sidebar-name");
-  const sidebarAvatar = document.getElementById("sidebar-avatar");
-  const saveBtn = document.getElementById("admin-profile-save-btn");
-
-  if (!nameInput || !emailInput || !avatarInput || !themeSelect || !saveBtn) {
-    return; // por si la vista aún no está renderizada
-  }
-
-  const uid = user.uid;
-  const storageKey = `adminProfile_${uid}`;
-
-  // Leer perfil guardado (si existe)
-  let saved = null;
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (raw) saved = JSON.parse(raw);
-  } catch (e) {
-    console.error("Error leyendo perfil de admin:", e);
-  }
-
-  // Correo desde Firebase Auth
-  const email = user.email || (saved && saved.email) || "";
-  emailInput.value = email;
-
-  // Nombre: guardado, o derivado del correo, o "Admin"
-  let name = (saved && saved.name) || "";
-  if (!name) {
-    if (email) {
-      name = email.split("@")[0];
-      name = name.charAt(0).toUpperCase() + name.slice(1);
-    } else {
-      name = "Admin";
-    }
-  }
-  nameInput.value = name;
-  if (sidebarName) sidebarName.textContent = name;
-
-  // Avatar: si hay URL guardada, usarla; si no, inicial por letra
-  const avatarUrl = (saved && saved.avatarUrl) || "";
-  avatarInput.value = avatarUrl;
-
-  if (sidebarAvatar) {
-    if (avatarUrl) {
-      sidebarAvatar.style.backgroundImage = `url('${avatarUrl}')`;
-      sidebarAvatar.style.backgroundSize = "cover";
-      sidebarAvatar.style.backgroundPosition = "center";
-      sidebarAvatar.textContent = "";
-    } else {
-      sidebarAvatar.style.backgroundImage = "";
-      sidebarAvatar.textContent = name.charAt(0).toUpperCase();
-    }
-  }
-
-  // Tema
-  const theme = (saved && saved.theme) || "oscuro";
-  themeSelect.value = theme;
-  applyTheme(theme);
-
-  // Guardar cambios al hacer clic
-  saveBtn.onclick = () => {
-    const newName = nameInput.value.trim() || name;
-    const newAvatar = avatarInput.value.trim();
-    const newTheme = themeSelect.value || "oscuro";
-
-    const profile = {
-      name: newName,
-      email: emailInput.value || email,
-      avatarUrl: newAvatar,
-      theme: newTheme
-    };
-
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(profile));
-      alert("Perfil de administrador guardado.");
-    } catch (e) {
-      console.error("Error guardando perfil de admin:", e);
+      tryPath(0);
     }
 
-    // Actualizar sidebar
-    if (sidebarName) sidebarName.textContent = newName;
+    function applyTheme(theme) {
+      const body = document.body;
+      if (!body) return;
 
-    if (sidebarAvatar) {
-      if (newAvatar) {
-        sidebarAvatar.style.backgroundImage = `url('${newAvatar}')`;
-        sidebarAvatar.style.backgroundSize = "cover";
-        sidebarAvatar.style.backgroundPosition = "center";
-        sidebarAvatar.textContent = "";
+      body.classList.remove("theme-dark", "theme-light");
+
+      if (theme === "claro") {
+        body.classList.add("theme-light");
       } else {
-        sidebarAvatar.style.backgroundImage = "";
-        sidebarAvatar.textContent = newName.charAt(0).toUpperCase();
+        body.classList.add("theme-dark");
       }
     }
 
-    applyTheme(newTheme);
-  };
-}
+    function initAdminProfile(user) {
+      const nameInput = document.getElementById("admin-name");
+      const emailInput = document.getElementById("admin-email");
+      const avatarInput = document.getElementById("admin-avatar");
+      const themeSelect = document.getElementById("admin-theme");
+      const sidebarName = document.getElementById("sidebar-name");
+      const sidebarAvatar = document.getElementById("sidebar-avatar");
+      const saveBtn = document.getElementById("admin-profile-save-btn");
 
+      if (!nameInput || !emailInput || !avatarInput || !themeSelect || !saveBtn) {
+        return;
+      }
 
+      const uid = user.uid;
+      const storageKey = `adminProfile_${uid}`;
 
+      let saved = null;
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {
+        console.error("Error leyendo perfil de admin:", e);
+      }
+
+      const email = user.email || (saved && saved.email) || "";
+      emailInput.value = email;
+
+      let name = (saved && saved.name) || "";
+      if (!name) {
+        if (email) {
+          name = email.split("@")[0];
+          name = name.charAt(0).toUpperCase() + name.slice(1);
+        } else {
+          name = "Admin";
+        }
+      }
+      nameInput.value = name;
+      if (sidebarName) sidebarName.textContent = name;
+
+      const avatarUrl = (saved && saved.avatarUrl) || "";
+      avatarInput.value = avatarUrl;
+
+      if (sidebarAvatar) {
+        if (avatarUrl) {
+          sidebarAvatar.style.backgroundImage = `url('${avatarUrl}')`;
+          sidebarAvatar.style.backgroundSize = "cover";
+          sidebarAvatar.style.backgroundPosition = "center";
+          sidebarAvatar.textContent = "";
+        } else {
+          sidebarAvatar.style.backgroundImage = "";
+          sidebarAvatar.textContent = name.charAt(0).toUpperCase();
+        }
+      }
+
+      const theme = (saved && saved.theme) || "oscuro";
+      themeSelect.value = theme;
+      applyTheme(theme);
+
+      saveBtn.onclick = () => {
+        const newName = nameInput.value.trim() || name;
+        const newAvatar = avatarInput.value.trim();
+        const newTheme = themeSelect.value || "oscuro";
+
+        const profile = {
+          name: newName,
+          email: emailInput.value || email,
+          avatarUrl: newAvatar,
+          theme: newTheme
+        };
+
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(profile));
+          alert("Perfil de administrador guardado.");
+        } catch (e) {
+          console.error("Error guardando perfil de admin:", e);
+        }
+
+        if (sidebarName) sidebarName.textContent = newName;
+
+        if (sidebarAvatar) {
+          if (newAvatar) {
+            sidebarAvatar.style.backgroundImage = `url('${newAvatar}')`;
+            sidebarAvatar.style.backgroundSize = "cover";
+            sidebarAvatar.style.backgroundPosition = "center";
+            sidebarAvatar.textContent = "";
+          } else {
+            sidebarAvatar.style.backgroundImage = "";
+            sidebarAvatar.textContent = newName.charAt(0).toUpperCase();
+          }
+        }
+
+        applyTheme(newTheme);
+      };
+    }
 
     // --------- NOTIFICACIONES STOCK BAJO ----------
     function showLowStockNotifications() {
@@ -573,14 +628,12 @@ function initAdminProfile(user) {
     window.loadUsers = loadUsers;
     window.loadClients = loadClients;
 
-
     // Inicializar cuando cargue el DOM
     window.addEventListener("DOMContentLoaded", () => {
       loadProducts();
       loadUsers();
       loadClients();
 
-      // 👇 Si ya tenemos al admin desde onAuthStateChanged, rellenamos el perfil
       if (currentAdminUser) {
         initAdminProfile(currentAdminUser);
       }
@@ -598,6 +651,30 @@ function initAdminProfile(user) {
           const promotion = document.getElementById("product-promotion").value;
 
           saveProduct(id, name, description, price, stock, discount, promotion);
+        });
+      }
+
+      const createUserForm = document.getElementById("create-user-form");
+      if (createUserForm) {
+        createUserForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const firstName = document.getElementById("new-user-firstname").value.trim();
+          const lastName = document.getElementById("new-user-lastname").value.trim();
+          const email = document.getElementById("new-user-email").value.trim();
+          const password = document.getElementById("new-user-password").value.trim();
+          const role = document.getElementById("new-user-role").value;
+
+          if (!firstName || !lastName || !email || !password || !role) {
+            showCreateUserMessage("Completa todos los campos.", "error");
+            return;
+          }
+
+          if (password.length < 6) {
+            showCreateUserMessage("La contraseña debe tener al menos 6 caracteres.", "error");
+            return;
+          }
+
+          createUserByAdmin(firstName, lastName, email, password, role);
         });
       }
     });
@@ -647,14 +724,10 @@ function initAdminProfile(user) {
       <header class="main-header">
         <div>
           <h1 class="page-title">Administración</h1>
-          <p class="page-subtitle">Gestiona productos, stock y reportes de ventas.</p>
+          <p class="page-subtitle">Gestiona productos, usuarios, clientes y stock.</p>
         </div>
 
         <div class="top-bar">
-          <!-- <button class="center-button" onclick="showLowStockNotifications()" title="Ver productos con stock bajo">
-            <img src="notification3.png" alt="Notificación" class="img">
-          </button> -->
-          <!-- <button class="btn-config" onclick="openPopup()">Config</button> -->
           <button class="btn-login" onclick="window.location.href='../index.html'">Inicio</button>
           <button class="btn-login" onclick="logout()">Cerrar Sesión</button>
         </div>
@@ -729,7 +802,7 @@ function initAdminProfile(user) {
           <div class="card">
             <h2>Perfil de administrador</h2>
             <p class="section-description">
-              Configuración básica de tu perfil. <!-- (ejemplo visual, sin conexión aún a Firebase). -->
+              Configuración básica de tu perfil.
             </p>
 
             <form id="admin-profile-form">
@@ -760,12 +833,32 @@ function initAdminProfile(user) {
       <div id="view-users" class="view">
         <section class="section">
           <div class="card">
+            <h2>Crear usuario</h2>
+            <p class="section-description">
+              Crea nuevos usuarios Administrador o Empleado.
+            </p>
+            <form id="create-user-form">
+              <div class="two-column">
+                <input type="text" id="new-user-firstname" placeholder="Nombre" required>
+                <input type="text" id="new-user-lastname" placeholder="Apellido" required>
+              </div>
+              <input type="email" id="new-user-email" placeholder="Correo electrónico" required>
+              <input type="password" id="new-user-password" placeholder="Contraseña" required>
+              <select id="new-user-role" required>
+                <option value="empleado">Empleado</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <p id="create-user-message" class="section-description"></p>
+              <button type="submit">Crear usuario</button>
+            </form>
+          </div>
+
+          <div class="card">
             <h2>Usuarios del sistema</h2>
             <p class="section-description">
-              Se muestran los usuarios registrados en la base de datos (rama "users").
+              Se muestran los usuarios registrados en la base de datos.
             </p>
             <p id="users-status" class="section-description"></p>
-
 
             <div class="table-wrapper">
               <table class="product-table">
@@ -793,7 +886,7 @@ function initAdminProfile(user) {
           <div class="card">
             <h2>Clientes</h2>
             <p class="section-description">
-              Lista de clientes desde Firebase (rama "clients" o "clientes").
+              Lista de clientes desde Firebase (rama "clientes" o "clients").
             </p>
             <p id="clients-status" class="section-description"></p>
 
@@ -967,8 +1060,6 @@ function initAdminProfile(user) {
 
       <button type="button" onclick="saveSettings()">Guardar Configuración</button>
     </form>
-    <br>
-    <!-- <button type="button" onclick="showLowStockNotifications()">Ver Notificaciones de Stock Bajo</button> -->
   </div>
 
   <!-- POPUP (simple) -->
@@ -1060,7 +1151,7 @@ Estilo: ${notificationStyle}`
       yearLabel.textContent = year;
 
       const firstDay = new Date(year, month, 1);
-      let startDay = (firstDay.getDay() + 6) % 7; // lunes = 0
+      let startDay = (firstDay.getDay() + 6) % 7;
 
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -1097,7 +1188,6 @@ Estilo: ${notificationStyle}`
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      // Nav de vistas
       const navItems = document.querySelectorAll(".nav-item");
       const views = document.querySelectorAll(".view");
 
@@ -1120,7 +1210,6 @@ Estilo: ${notificationStyle}`
         });
       });
 
-      // Calendario
       const todayLabel = document.getElementById("today-label");
       if (todayLabel) {
         const options = { weekday: "long", day: "numeric", month: "long", year: "numeric" };
@@ -1145,7 +1234,6 @@ Estilo: ${notificationStyle}`
 
       renderCalendar();
 
-      // Buscador productos
       const searchInput = document.getElementById("product-search");
       if (searchInput) {
         searchInput.addEventListener("input", () => {
